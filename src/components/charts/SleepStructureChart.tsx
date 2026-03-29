@@ -5,9 +5,9 @@ import * as echarts from "echarts";
 
 interface SleepStructureChartProps {
   data: {
-    deep?: number;
-    light?: number;
-    rem?: number;
+    deep: number | null | undefined;
+    light: number | null | undefined;
+    rem: number | null | undefined;
   }[];
 }
 

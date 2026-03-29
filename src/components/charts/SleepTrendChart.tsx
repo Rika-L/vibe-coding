@@ -7,7 +7,7 @@ interface SleepTrendChartProps {
   data: {
     date: string;
     duration: number;
-    score?: number;
+    score: number | null | undefined;
   }[];
 }
 

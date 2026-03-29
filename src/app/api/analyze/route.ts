@@ -3,6 +3,16 @@ import { generateText } from "ai";
 import { aiModel } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
 
+interface SleepRecord {
+  date: Date;
+  sleepDuration: number;
+  deepSleep: number | null;
+  lightSleep: number | null;
+  remSleep: number | null;
+  sleepScore: number | null;
+  heartRate: number | null;
+}
+
 export async function POST() {
   try {
     const records = await prisma.sleepRecord.findMany({
@@ -17,7 +27,7 @@ export async function POST() {
       );
     }
 
-    const dataSummary = records.map((r) => ({
+    const dataSummary = records.map((r: SleepRecord) => ({
       date: r.date.toISOString().split("T")[0],
       duration: r.sleepDuration,
       deep: r.deepSleep,
@@ -28,10 +38,10 @@ export async function POST() {
     }));
 
     const avgDuration =
-      records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length;
+      records.reduce((sum: number, r: SleepRecord) => sum + r.sleepDuration, 0) / records.length;
     const avgScore =
-      records.reduce((sum, r) => sum + (r.sleepScore || 0), 0) /
-      records.filter((r) => r.sleepScore).length;
+      records.reduce((sum: number, r: SleepRecord) => sum + (r.sleepScore || 0), 0) /
+      records.filter((r: SleepRecord) => r.sleepScore).length;
 
     const prompt = `作为睡眠健康专家，请分析以下睡眠数据并生成报告：
 

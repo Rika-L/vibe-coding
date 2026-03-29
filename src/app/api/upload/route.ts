@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseCSV } from "@/lib/csv-parser";
 import { prisma } from "@/lib/prisma";
+import { SleepRecord } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to database
-    const records = await Promise.all(
+    const records: (SleepRecord | null)[] = await Promise.all(
       parsedData.map(async (item) => {
         try {
           return await prisma.sleepRecord.create({
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    const validRecords = records.filter((r) => r !== null);
+    const validRecords = records.filter((r): r is SleepRecord => r !== null);
 
     return NextResponse.json({
       success: true,

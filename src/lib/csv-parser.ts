@@ -23,7 +23,7 @@ export function parseCSV(csvText: string): Promise<ParsedSleepData[]> {
         const parsed = data.map((row) => parseRow(row));
         resolve(parsed);
       },
-      error: (error) => reject(error),
+      error: (error: Error) => reject(error),
     });
   });
 }

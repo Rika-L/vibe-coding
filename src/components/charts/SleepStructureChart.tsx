@@ -51,9 +51,9 @@ export function SleepStructureChart({ data }: SleepStructureChartProps) {
             formatter: "{b}\n{c}h ({d}%)",
           },
           data: [
-            { value: avgDeep.toFixed(1), name: "深睡", itemStyle: { color: "#5470c6" } },
-            { value: avgLight.toFixed(1), name: "浅睡", itemStyle: { color: "#91cc75" } },
-            { value: avgRem.toFixed(1), name: "REM", itemStyle: { color: "#fac858" } },
+            { value: Number(avgDeep.toFixed(1)), name: "深睡", itemStyle: { color: "#5470c6" } },
+            { value: Number(avgLight.toFixed(1)), name: "浅睡", itemStyle: { color: "#91cc75" } },
+            { value: Number(avgRem.toFixed(1)), name: "REM", itemStyle: { color: "#fac858" } },
           ],
         },
       ],

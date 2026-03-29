@@ -1,13 +1,34 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+model SleepRecord {
+  id            String   @id @default(uuid())
+  date          DateTime
+  bedTime       DateTime
+  wakeTime      DateTime
+  sleepDuration Float
+  deepSleep     Float?
+  lightSleep    Float?
+  remSleep      Float?
+  awakeCount    Int?
+  sleepScore    Int?
+  heartRate     Int?
+  createdAt     DateTime @default(now())
+
+  @@index([date])
+}
+
+model AnalysisReport {
+  id           String   @id @default(uuid())
+  title        String
+  summary      String
+  suggestions  String
+  sleepQuality String
+  dataRange    String
+  createdAt    DateTime @default(now())
 }

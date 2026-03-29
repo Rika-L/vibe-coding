@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateText } from "ai";
-import { aiModel } from "@/lib/ai";
+import { generateSleepAnalysis } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
 
 interface SleepRecord {
@@ -60,10 +59,7 @@ ${JSON.stringify(dataSummary, null, 2)}
   "suggestions": "3-5条改善睡眠的具体建议"
 }`;
 
-    const { text } = await generateText({
-      model: aiModel,
-      prompt,
-    });
+    const text = await generateSleepAnalysis(prompt);
 
     // Parse AI response
     let analysis;

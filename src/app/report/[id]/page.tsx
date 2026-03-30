@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Lightbulb } from "lucide-react";
 
@@ -14,19 +14,20 @@ interface Report {
   createdAt: string;
 }
 
-export default function ReportPage({ params }: { params: { id: string } }) {
+export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchReport();
-  }, [params.id]);
+  }, [id]);
 
   const fetchReport = async () => {
     try {
       const res = await fetch("/api/reports");
       const data = await res.json();
-      const found = data.reports?.find((r: Report) => r.id === params.id);
+      const found = data.reports?.find((r: Report) => r.id === id);
       if (found) {
         setReport(found);
       }

@@ -79,7 +79,9 @@ ${JSON.stringify(dataSummary, null, 2)}
       data: {
         title: `睡眠分析报告 - ${new Date().toLocaleDateString()}`,
         summary: analysis.summary || "",
-        suggestions: analysis.suggestions || "",
+        suggestions: Array.isArray(analysis.suggestions)
+          ? analysis.suggestions.join("\n")
+          : analysis.suggestions || "",
         sleepQuality: analysis.sleepQuality || "良好",
         dataRange: `${records[0].date.toLocaleDateString()} 至 ${records[records.length - 1].date.toLocaleDateString()}`,
       },

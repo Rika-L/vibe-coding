@@ -3,11 +3,11 @@ import OpenAI from "openai";
 // 讯飞星火模型配置
 const xfyunClient = new OpenAI({
   apiKey: process.env.XFYUN_API_KEY || "",
-  baseURL: "https://maas-api.cn-huabei-1.xf-yun.com/v2",
+  baseURL: "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2",
 });
 
 // 模型 ID 映射
-const MODEL_ID = "xdeepseekv3"; // 讯飞 DeepSeek V3 模型
+const MODEL_ID = "astron-code-latest"; // 讯飞 DeepSeek V3 模型
 
 export async function generateSleepAnalysis(prompt: string): Promise<string> {
   try {

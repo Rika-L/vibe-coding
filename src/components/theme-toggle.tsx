@@ -1,8 +1,8 @@
+
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { Moon, Sun } from "lucide-react";
-
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,36 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  const [theme, setThemeState] = React.useState<"light" | "dark" | "system">("system");
 
   React.useEffect(() => {
     setMounted(true);
-    // Get initial theme from localStorage or system preference
-    const stored = localStorage.getItem("theme") as "light" | "dark" | "system" | null;
-    if (stored) {
-      setThemeState(stored);
-      applyTheme(stored);
-    } else {
-      applyTheme("system");
-    }
   }, []);
-
-  const applyTheme = (newTheme: "light" | "dark" | "system") => {
-    const root = document.documentElement;
-    const isDark =
-      newTheme === "dark" ||
-      (newTheme === "system" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-    root.classList.toggle("dark", isDark);
-  };
-
-  const setTheme = (newTheme: "light" | "dark" | "system") => {
-    setThemeState(newTheme);
-    localStorage.setItem("theme", newTheme);
-    applyTheme(newTheme);
-  };
 
   if (!mounted) {
     return (

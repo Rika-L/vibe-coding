@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,16 +18,6 @@ export const metadata: Metadata = {
   description: "上传你的睡眠数据，获取 AI 智能分析报告",
 };
 
-const themeScript = `
-  (function() {
-    try {
-      var theme = localStorage.getItem('theme');
-      var isDark = theme === 'dark' ||
-        (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      document.documentElement.classList.toggle('dark', isDark);
-    } catch (e) {}
-  })();
-`;
 
 export default function RootLayout({
   children,
@@ -41,11 +31,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
-      <Script id="theme-script" strategy="beforeInteractive">
-        {themeScript}
-      </Script>
     </html>
   );
 }

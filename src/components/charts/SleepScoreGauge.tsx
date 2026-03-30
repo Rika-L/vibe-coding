@@ -14,15 +14,19 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
   useEffect(() => {
     if (!chartRef.current) return;
 
+    const isDark = document.documentElement.classList.contains("dark");
     chartInstance.current = echarts.init(chartRef.current);
+
+    const color = score >= 80 ? "#22c55e" : score >= 60 ? "#3b82f6" : "#ef4444";
 
     const option: echarts.EChartsOption = {
       title: {
         text: "睡眠评分",
         left: "center",
-        top: "60%",
+        top: "65%",
         textStyle: {
-          fontSize: 16,
+          fontSize: 14,
+          color: isDark ? "#a1a1aa" : "#71717a",
         },
       },
       series: [
@@ -36,18 +40,20 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
           radius: "90%",
           center: ["50%", "70%"],
           itemStyle: {
-            color: score >= 80 ? "#91cc75" : score >= 60 ? "#fac858" : "#ee6666",
+            color: color,
           },
           progress: {
             show: true,
-            width: 20,
+            width: 16,
+            roundCap: true,
           },
           pointer: {
             show: false,
           },
           axisLine: {
             lineStyle: {
-              width: 20,
+              width: 16,
+              color: [[1, isDark ? "#27272a" : "#e4e4e7"]],
             },
           },
           axisTick: {
@@ -57,14 +63,15 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
             show: false,
           },
           axisLabel: {
-            distance: 30,
-            fontSize: 12,
+            show: false,
           },
           detail: {
             valueAnimation: true,
-            fontSize: 40,
-            offsetCenter: [0, "-10%"],
+            fontSize: 48,
+            fontWeight: "bold",
+            offsetCenter: [0, "-5%"],
             formatter: "{value}",
+            color: isDark ? "#fafafa" : "#18181b",
           },
           data: [{ value: score }],
         },
@@ -74,13 +81,40 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
     chartInstance.current.setOption(option);
 
     const handleResize = () => chartInstance.current?.resize();
+
+    // Observer for theme changes
+    const observer = new MutationObserver(() => {
+      const newIsDark = document.documentElement.classList.contains("dark");
+      chartInstance.current?.setOption({
+        title: {
+          textStyle: { color: newIsDark ? "#a1a1aa" : "#71717a" },
+        },
+        series: [
+          {
+            axisLine: {
+              lineStyle: {
+                color: [[1, newIsDark ? "#27272a" : "#e4e4e7"]],
+              },
+            },
+            detail: { color: newIsDark ? "#fafafa" : "#18181b" },
+          },
+        ],
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
     window.addEventListener("resize", handleResize);
 
     return () => {
+      observer.disconnect();
       window.removeEventListener("resize", handleResize);
       chartInstance.current?.dispose();
     };
   }, [score]);
 
-  return <div ref={chartRef} style={{ width: "100%", height: "250px" }} />;
+  return <div ref={chartRef} style={{ width: "100%", height: "220px" }} />;
 }

@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Sparkles,
+  Clock,
+  Calendar,
+  TrendingUp,
+  Database,
+  Moon,
+} from "lucide-react";
 import {
   SleepTrendChart,
   SleepStructureChart,
   SleepScoreGauge,
 } from "@/components/charts";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface SleepRecord {
   id: string;
@@ -57,20 +68,26 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">加载中...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
       </div>
     );
   }
 
   if (records.length === 0) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="text-lg text-gray-600">暂无数据，请先上传 CSV 文件</p>
-        <Link
-          href="/"
-          className="rounded-lg bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700"
-        >
-          返回上传
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
+        <div className="text-center">
+          <Moon className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
+          <h2 className="mb-2 text-2xl font-semibold text-foreground">
+            暂无数据
+          </h2>
+          <p className="text-muted-foreground">请先上传 CSV 文件</p>
+        </div>
+        <Link href="/">
+          <Button>返回上传</Button>
         </Link>
       </div>
     );
@@ -81,7 +98,10 @@ export default function Dashboard() {
     records.filter((r) => r.sleepScore).length || 0;
 
   const chartData = records.map((r) => ({
-    date: new Date(r.date).toLocaleDateString("zh-CN", { month: "short", day: "numeric" }),
+    date: new Date(r.date).toLocaleDateString("zh-CN", {
+      month: "short",
+      day: "numeric",
+    }),
     duration: r.sleepDuration,
     score: r.sleepScore,
   }));
@@ -92,72 +112,130 @@ export default function Dashboard() {
     rem: r.remSleep,
   }));
 
+  const avgDuration =
+    records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length;
+  const avgDeep =
+    records.reduce((sum, r) => sum + (r.deepSleep || 0), 0) /
+    records.filter((r) => r.deepSleep).length || 0;
+  const dataCompleteness =
+    (records.filter((r) => r.sleepScore).length / records.length) * 100;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-          >
-            <ArrowLeft className="h-5 w-5" />
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
             返回
           </Link>
-          <button
-            onClick={handleAnalyze}
-            disabled={analyzing}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2 text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
-          >
-            <Sparkles className="h-4 w-4" />
-            {analyzing ? "分析中..." : "生成 AI 报告"}
-          </button>
-        </div>
 
-        <h1 className="mb-8 text-3xl font-bold text-gray-900 dark:text-white">
-          睡眠数据看板
-        </h1>
+          <h1 className="text-lg font-semibold text-foreground">
+            睡眠数据看板
+          </h1>
 
-        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-            <SleepScoreGauge score={Math.round(avgScore)} />
-          </div>
-          <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800 lg:col-span-2">
-            <SleepTrendChart data={chartData} />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              onClick={handleAnalyze}
+              disabled={analyzing}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              {analyzing ? "分析中..." : "生成 AI 报告"}
+            </Button>
           </div>
         </div>
+      </header>
 
-        <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-          <SleepStructureChart data={structureData} />
-        </div>
-
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Stats Grid */}
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard
+            icon={Clock}
             title="平均睡眠时长"
-            value={`${(records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length).toFixed(1)}h`}
+            value={`${avgDuration.toFixed(1)}h`}
+            subtitle="每日平均"
           />
           <StatCard
+            icon={Calendar}
             title="记录天数"
             value={`${records.length}天`}
+            subtitle="累计记录"
           />
           <StatCard
+            icon={TrendingUp}
             title="平均深睡"
-            value={`${(records.reduce((sum, r) => sum + (r.deepSleep || 0), 0) / records.filter((r) => r.deepSleep).length || 0).toFixed(1)}h`}
+            value={`${avgDeep.toFixed(1)}h`}
+            subtitle="深度睡眠"
           />
           <StatCard
+            icon={Database}
             title="数据完整度"
-            value={`${Math.round((records.filter((r) => r.sleepScore).length / records.length) * 100)}%`}
+            value={`${Math.round(dataCompleteness)}%`}
+            subtitle="有效数据"
           />
         </div>
-      </div>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Sleep Score Gauge */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">睡眠评分</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SleepScoreGauge score={Math.round(avgScore)} />
+            </CardContent>
+          </Card>
+
+          {/* Sleep Trend Chart */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">睡眠趋势</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SleepTrendChart data={chartData} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sleep Structure Chart */}
+        <Card className="mt-6 border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">平均睡眠结构</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SleepStructureChart data={structureData} />
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }
 
-function StatCard({ title, value }: { title: string; value: string }) {
+function StatCard({
+  icon: Icon,
+  title,
+  value,
+  subtitle,
+}: {
+  icon: React.ElementType;
+  title: string;
+  value: string;
+  subtitle: string;
+}) {
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
-      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-    </div>
+    <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+      <CardContent className="p-6">
+        <div className="mb-3 inline-flex rounded-lg bg-primary/10 p-2 transition-transform duration-300 group-hover:scale-110">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className="text-3xl font-bold text-foreground">{value}</p>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      </CardContent>
+    </Card>
   );
 }

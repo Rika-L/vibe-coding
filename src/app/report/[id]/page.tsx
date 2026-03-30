@@ -2,7 +2,17 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Lightbulb } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Lightbulb,
+  FileText,
+  Moon,
+  Star,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Report {
   id: string;
@@ -14,13 +24,18 @@ interface Report {
   createdAt: string;
 }
 
-export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ReportPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchReport = async () => {
@@ -41,89 +56,157 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">加载中...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
       </div>
     );
   }
 
   if (!report) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="text-lg text-gray-600">报告不存在</p>
-        <Link
-          href="/dashboard"
-          className="rounded-lg bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700"
-        >
-          返回看板
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
+        <div className="text-center">
+          <FileText className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
+          <h2 className="mb-2 text-2xl font-semibold text-foreground">
+            报告不存在
+          </h2>
+          <p className="text-muted-foreground">该报告可能已被删除</p>
+        </div>
+        <Link href="/dashboard">
+          <Button>返回看板</Button>
         </Link>
       </div>
     );
   }
 
-  const qualityColor =
-    report.sleepQuality === "优秀"
-      ? "text-green-600"
-      : report.sleepQuality === "良好"
-        ? "text-blue-600"
-        : report.sleepQuality === "一般"
-          ? "text-yellow-600"
-          : "text-red-600";
+  const qualityConfig = {
+    优秀: {
+      color: "text-green-500",
+      bg: "bg-green-500/10",
+      border: "border-green-500/20",
+    },
+    良好: {
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/20",
+    },
+    一般: {
+      color: "text-yellow-500",
+      bg: "bg-yellow-500/10",
+      border: "border-yellow-500/20",
+    },
+    较差: {
+      color: "text-red-500",
+      bg: "bg-red-500/10",
+      border: "border-red-500/20",
+    },
+  };
+
+  const qualityStyle =
+    qualityConfig[report.sleepQuality as keyof typeof qualityConfig] ||
+    qualityConfig["良好"];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto max-w-3xl px-4 py-8">
-        <Link
-          href="/dashboard"
-          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          返回看板
-        </Link>
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            返回看板
+          </Link>
 
-        <div className="rounded-2xl bg-white p-8 shadow-sm dark:bg-gray-800">
-          <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
+          <ThemeToggle />
+
+          <div className="w-25" /> {/* Spacer for centering */}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto max-w-4xl px-4 py-8">
+        {/* Report Header */}
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+            <Moon className="h-4 w-4" />
+            AI 分析报告
+          </div>
+          <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">
             {report.title}
           </h1>
-
-          <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {new Date(report.createdAt).toLocaleDateString("zh-CN")}
+              {new Date(report.createdAt).toLocaleDateString("zh-CN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </span>
-            <span>数据范围：{report.dataRange}</span>
+            <span className="rounded-full bg-muted px-3 py-1">
+              数据范围：{report.dataRange}
+            </span>
           </div>
+        </div>
 
-          <div className="mb-8">
-            <div className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+        {/* Sleep Quality Card */}
+        <Card
+          className={`mb-8 border-2 ${qualityStyle.border} ${qualityStyle.bg}`}
+        >
+          <CardContent className="flex flex-col items-center py-8">
+            <Star className={`mb-4 h-12 w-12 ${qualityStyle.color}`} />
+            <p className="mb-2 text-sm font-medium text-muted-foreground">
               睡眠质量评价
-            </div>
-            <div className={`text-4xl font-bold ${qualityColor}`}>
+            </p>
+            <p className={`text-5xl font-bold ${qualityStyle.color}`}>
               {report.sleepQuality}
-            </div>
-          </div>
+            </p>
+          </CardContent>
+        </Card>
 
-          <div className="mb-8">
-            <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+        {/* Summary Card */}
+        <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg font-medium">
+              <FileText className="h-5 w-5 text-primary" />
               分析总结
-            </h2>
-            <p className="leading-relaxed text-gray-700 dark:text-gray-300">
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="leading-relaxed text-foreground/90">
               {report.summary}
             </p>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div>
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white">
+        {/* Suggestions Card */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg font-medium">
               <Lightbulb className="h-5 w-5 text-yellow-500" />
               改善建议
-            </h2>
-            <div className="rounded-xl bg-indigo-50 p-6 dark:bg-indigo-900/20">
-              <p className="whitespace-pre-line leading-relaxed text-gray-700 dark:text-gray-300">
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-xl bg-primary/5 p-6">
+              <p className="whitespace-pre-line leading-relaxed text-foreground/90">
                 {report.suggestions}
               </p>
             </div>
-          </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="mt-8 flex justify-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline">返回看板</Button>
+          </Link>
+          <Link href="/">
+            <Button>上传新数据</Button>
+          </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

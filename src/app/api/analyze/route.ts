@@ -13,7 +13,7 @@ interface SleepRecord {
   heartRate: number | null;
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
 
@@ -24,15 +24,43 @@ export async function POST() {
       );
     }
 
+    // 解析请求体获取日期参数
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    try {
+      const body = await request.json();
+      if (body.startDate) {
+        startDate = new Date(body.startDate);
+      }
+      if (body.endDate) {
+        endDate = new Date(body.endDate);
+        // 设置为当天结束时间
+        endDate.setHours(23, 59, 59, 999);
+      }
+    } catch {
+      // 如果没有请求体，使用默认逻辑
+    }
+
+    // 构建查询条件
+    const whereClause: { userId: string; date?: { gte?: Date; lte?: Date } } = {
+      userId: user.userId,
+    };
+
+    if (startDate || endDate) {
+      whereClause.date = {};
+      if (startDate) whereClause.date.gte = startDate;
+      if (endDate) whereClause.date.lte = endDate;
+    }
+
     const records = await prisma.sleepRecord.findMany({
-      where: { userId: user.userId },
+      where: whereClause,
       orderBy: { date: "asc" },
-      take: 30,
     });
 
     if (records.length === 0) {
       return NextResponse.json(
-        { error: "No sleep data found" },
+        { error: "所选区间内没有睡眠数据" },
         { status: 400 }
       );
     }
@@ -100,7 +128,6 @@ ${JSON.stringify(dataSummary, null, 2)}
       } else {
         const parsed = JSON.parse(jsonMatch[0]);
 
-        // 验证字段
         analysis = {
           summary: typeof parsed.summary === "string" ? parsed.summary : defaultAnalysis.summary,
           sleepQuality: validQualities.includes(parsed.sleepQuality)
@@ -109,7 +136,6 @@ ${JSON.stringify(dataSummary, null, 2)}
           suggestions: parsed.suggestions || defaultAnalysis.suggestions,
         };
 
-        // 记录缺失字段警告
         if (!parsed.summary) console.warn("AI 响应缺少 summary 字段");
         if (!parsed.sleepQuality) console.warn("AI 响应缺少 sleepQuality 字段");
         if (!parsed.suggestions) console.warn("AI 响应缺少 suggestions 字段");

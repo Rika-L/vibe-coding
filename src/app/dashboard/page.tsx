@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DateRangeDialog } from "@/components/date-range-dialog";
 
 // 前端请求超时时间 (毫秒)
 const FETCH_TIMEOUT = 90000;
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [loadError, setLoadError] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -103,14 +105,19 @@ export default function Dashboard() {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (startDate?: string, endDate?: string) => {
     setAnalyzing(true);
     setAnalyzeProgress("正在分析数据...");
+    setDialogOpen(false);
 
     try {
       const res = await fetchWithTimeout(
         "/api/analyze",
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ startDate, endDate }),
+        },
         FETCH_TIMEOUT
       );
       const data = await res.json();
@@ -237,7 +244,7 @@ export default function Dashboard() {
               <LogOut className="h-4 w-4" />
             </Button>
             <Button
-              onClick={handleAnalyze}
+              onClick={() => setDialogOpen(true)}
               disabled={analyzing}
               className="gap-2"
             >
@@ -320,6 +327,14 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Date Range Dialog */}
+      <DateRangeDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onConfirm={(startDate, endDate) => handleAnalyze(startDate, endDate)}
+        loading={analyzing}
+      />
     </div>
   );
 }

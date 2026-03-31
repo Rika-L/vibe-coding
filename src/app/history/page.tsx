@@ -15,6 +15,10 @@ import {
   AlertCircle,
   Search,
   X,
+  FileText,
+  Sparkles,
+  Trash2,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +26,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+
+type TabType = "records" | "reports";
 
 interface SleepRecord {
   id: string;
@@ -33,6 +39,15 @@ interface SleepRecord {
   sleepScore: number | null;
 }
 
+interface AnalysisReport {
+  id: string;
+  title: string;
+  summary: string;
+  sleepQuality: string;
+  dataRange: string;
+  createdAt: string;
+}
+
 interface Pagination {
   page: number;
   pageSize: number;
@@ -42,7 +57,9 @@ interface Pagination {
 
 export default function HistoryPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>("records");
   const [records, setRecords] = useState<SleepRecord[]>([]);
+  const [reports, setReports] = useState<AnalysisReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtering, setFiltering] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -55,6 +72,7 @@ export default function HistoryPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -93,9 +111,47 @@ export default function HistoryPage() {
     }
   }, [pagination.page, pagination.pageSize, startDate, endDate, router]);
 
+  const fetchReports = useCallback(async () => {
+    try {
+      setLoadError(false);
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        pageSize: "10",
+      });
+
+      const res = await fetch(`/api/reports?${params}`);
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push("/login?redirect=/history");
+          return;
+        }
+        throw new Error("网络请求失败");
+      }
+
+      const data = await res.json();
+      setReports(data.reports || []);
+      setPagination((prev) => ({
+        ...prev,
+        total: data.pagination.total,
+        totalPages: data.pagination.totalPages,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch reports:", error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, router]);
+
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    setLoading(true);
+    if (activeTab === "records") {
+      fetchData();
+    } else {
+      fetchReports();
+    }
+  }, [activeTab, fetchData, fetchReports]);
 
   const handleLogout = async () => {
     try {
@@ -124,6 +180,29 @@ export default function HistoryPage() {
     setLoading(true);
   };
 
+  const handleDeleteReport = async (reportId: string) => {
+    if (!confirm("确定要删除这份报告吗？")) return;
+
+    setDeletingId(reportId);
+    try {
+      const res = await fetch(`/api/reports/${reportId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "删除失败");
+      }
+
+      toast.success("报告已删除");
+      fetchReports();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "删除失败");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -146,7 +225,10 @@ export default function HistoryPage() {
           <p className="text-muted-foreground">网络错误，请稍后重试</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={() => fetchData()}>
+          <Button
+            variant="outline"
+            onClick={() => (activeTab === "records" ? fetchData() : fetchReports())}
+          >
             重新加载
           </Button>
           <Link href="/dashboard">
@@ -184,187 +266,327 @@ export default function HistoryPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Filter Section */}
-        <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">筛选条件</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex-1 min-w-[150px]">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                  开始日期
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="pl-10"
-                  />
+        {/* Tab Switcher */}
+        <div className="mb-6 flex gap-2">
+          <Button
+            variant={activeTab === "records" ? "default" : "outline"}
+            onClick={() => {
+              setActiveTab("records");
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+            className="gap-2"
+          >
+            <Moon className="h-4 w-4" />
+            睡眠记录
+          </Button>
+          <Button
+            variant={activeTab === "reports" ? "default" : "outline"}
+            onClick={() => {
+              setActiveTab("reports");
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI 分析报告
+          </Button>
+        </div>
+
+        {activeTab === "records" ? (
+          <>
+            {/* Filter Section */}
+            <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">筛选条件</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      开始日期
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      结束日期
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleFilter} disabled={filtering} className="gap-2">
+                    {filtering ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        筛选中...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4" />
+                        筛选
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" onClick={clearFilter} className="gap-2">
+                    <X className="h-4 w-4" />
+                    清除
+                  </Button>
+                  {pagination.total > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      找到 {pagination.total} 条记录
+                    </span>
+                  )}
                 </div>
-              </div>
-              <div className="flex-1 min-w-[150px]">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                  结束日期
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Button onClick={handleFilter} disabled={filtering} className="gap-2">
-                {filtering ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    筛选中...
-                  </>
+              </CardContent>
+            </Card>
+
+            {/* Data Table */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">
+                  睡眠记录 ({pagination.total} 条)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {records.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Moon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                    <p className="text-muted-foreground">暂无数据</p>
+                  </div>
                 ) : (
                   <>
-                    <Search className="h-4 w-4" />
-                    筛选
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              日期
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              睡眠时长
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              深睡
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              浅睡
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              REM
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              评分
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {records.map((record) => (
+                            <tr
+                              key={record.id}
+                              onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
+                              className={cn(
+                                "cursor-pointer border-b border-border/50 transition-all duration-200",
+                                record.id === selectedId
+                                  ? "bg-primary/10 border-l-2 border-l-primary"
+                                  : "hover:bg-muted/50"
+                              )}
+                            >
+                              <td className="px-4 py-3 text-sm">
+                                {new Date(record.date).toLocaleDateString("zh-CN")}
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  {record.sleepDuration.toFixed(1)}h
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                {record.deepSleep ? `${record.deepSleep.toFixed(1)}h` : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                {record.lightSleep ? `${record.lightSleep.toFixed(1)}h` : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                {record.remSleep ? `${record.remSleep.toFixed(1)}h` : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                {record.sleepScore ? (
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                      record.sleepScore >= 80
+                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        : record.sleepScore >= 60
+                                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                    }`}
+                                  >
+                                    {record.sleepScore}
+                                  </span>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="mt-4 flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        第 {pagination.page} / {pagination.totalPages} 页
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={pagination.page <= 1}
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={pagination.page >= pagination.totalPages}
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </>
                 )}
-              </Button>
-              <Button variant="outline" onClick={clearFilter} className="gap-2">
-                <X className="h-4 w-4" />
-                清除
-              </Button>
-              {pagination.total > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  找到 {pagination.total} 条记录
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          /* Reports Tab */
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">
+                AI 分析报告 ({pagination.total} 份)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reports.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Sparkles className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                  <p className="mb-4 text-muted-foreground">暂无分析报告</p>
+                  <Link href="/dashboard">
+                    <Button size="sm">生成第一份报告</Button>
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {reports.map((report) => {
+                      const qualityConfig: Record<string, { color: string; bg: string }> = {
+                        优秀: { color: "text-green-500", bg: "bg-green-500/10" },
+                        良好: { color: "text-blue-500", bg: "bg-blue-500/10" },
+                        一般: { color: "text-yellow-500", bg: "bg-yellow-500/10" },
+                        较差: { color: "text-red-500", bg: "bg-red-500/10" },
+                      };
+                      const qualityStyle = qualityConfig[report.sleepQuality] || qualityConfig["良好"];
 
-        {/* Data Table */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">
-              睡眠记录 ({pagination.total} 条)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {records.length === 0 ? (
-              <div className="py-12 text-center">
-                <Moon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                <p className="text-muted-foreground">暂无数据</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          日期
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          睡眠时长
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          深睡
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          浅睡
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          REM
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          评分
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {records.map((record) => (
-                        <tr
-                          key={record.id}
-                          onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
-                          className={cn(
-                            "cursor-pointer border-b border-border/50 transition-all duration-200",
-                            record.id === selectedId
-                              ? "bg-primary/10 border-l-2 border-l-primary"
-                              : "hover:bg-muted/50"
-                          )}
+                      return (
+                        <div
+                          key={report.id}
+                          className="group flex items-start justify-between gap-4 rounded-lg border border-border/50 p-4 transition-all hover:border-primary/30 hover:bg-muted/30"
                         >
-                          <td className="px-4 py-3 text-sm">
-                            {new Date(record.date).toLocaleDateString("zh-CN")}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
-                              {record.sleepDuration.toFixed(1)}h
+                          <Link
+                            href={`/report/${report.id}`}
+                            className="flex-1 min-w-0"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={cn("rounded-lg p-2", qualityStyle.bg)}>
+                                <Star className={cn("h-5 w-5", qualityStyle.color)} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-foreground truncate">
+                                  {report.title}
+                                </h3>
+                                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                                  {report.summary}
+                                </p>
+                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {new Date(report.createdAt).toLocaleDateString("zh-CN")}
+                                  </span>
+                                  <span className={cn("rounded-full px-2 py-0.5", qualityStyle.bg, qualityStyle.color)}>
+                                    {report.sleepQuality}
+                                  </span>
+                                  <span>{report.dataRange}</span>
+                                </div>
+                              </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {record.deepSleep ? `${record.deepSleep.toFixed(1)}h` : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {record.lightSleep ? `${record.lightSleep.toFixed(1)}h` : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {record.remSleep ? `${record.remSleep.toFixed(1)}h` : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {record.sleepScore ? (
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                  record.sleepScore >= 80
-                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                    : record.sleepScore >= 60
-                                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                }`}
-                              >
-                                {record.sleepScore}
-                              </span>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDeleteReport(report.id)}
+                            disabled={deletingId === report.id}
+                          >
+                            {deletingId === report.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "-"
+                              <Trash2 className="h-4 w-4" />
                             )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    第 {pagination.page} / {pagination.totalPages} 页
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.page <= 1}
-                      onClick={() => handlePageChange(pagination.page - 1)}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.page >= pagination.totalPages}
-                      onClick={() => handlePageChange(pagination.page + 1)}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+
+                  {/* Pagination */}
+                  {pagination.totalPages > 1 && (
+                    <div className="mt-6 flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        第 {pagination.page} / {pagination.totalPages} 页
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={pagination.page <= 1}
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={pagination.page >= pagination.totalPages}
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );

@@ -132,6 +132,7 @@ ${JSON.stringify(dataSummary, null, 2)}
           : analysis.suggestions || "",
         sleepQuality: analysis.sleepQuality || "良好",
         dataRange: `${records[0].date.toLocaleDateString()} 至 ${records[records.length - 1].date.toLocaleDateString()}`,
+        userId: user.userId,
       },
     });
 

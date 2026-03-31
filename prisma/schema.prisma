@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  name         String?
-  createdAt    DateTime      @default(now())
-  sleepRecords SleepRecord[]
+  id              String            @id @default(uuid())
+  email           String            @unique
+  password        String
+  name            String?
+  createdAt       DateTime          @default(now())
+  sleepRecords    SleepRecord[]
+  analysisReports AnalysisReport[]
 
   @@index([email])
 }
@@ -46,4 +47,8 @@ model AnalysisReport {
   sleepQuality String
   dataRange    String
   createdAt    DateTime @default(now())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }

@@ -23,7 +23,7 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
       title: {
         text: "睡眠评分",
         left: "center",
-        top: "65%",
+        top: "78%",
         textStyle: {
           fontSize: 14,
           color: isDark ? "#a1a1aa" : "#71717a",

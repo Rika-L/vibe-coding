@@ -38,9 +38,11 @@ export async function POST() {
 
     const avgDuration =
       records.reduce((sum: number, r: SleepRecord) => sum + r.sleepDuration, 0) / records.length;
-    const avgScore =
-      records.reduce((sum: number, r: SleepRecord) => sum + (r.sleepScore || 0), 0) /
-      records.filter((r: SleepRecord) => r.sleepScore).length;
+
+    const recordsWithScore = records.filter((r: SleepRecord) => r.sleepScore !== null);
+    const avgScore = recordsWithScore.length > 0
+      ? records.reduce((sum: number, r: SleepRecord) => sum + (r.sleepScore || 0), 0) / recordsWithScore.length
+      : 0;
 
     const prompt = `作为睡眠健康专家，请分析以下睡眠数据并生成报告：
 
@@ -61,16 +63,51 @@ ${JSON.stringify(dataSummary, null, 2)}
 
     const text = await generateSleepAnalysis(prompt);
 
-    // Parse AI response
-    let analysis;
+    // Parse AI response with validation
+    interface AIAnalysis {
+      summary?: string;
+      sleepQuality?: string;
+      suggestions?: string | string[];
+    }
+
+    const validQualities = ["优秀", "良好", "一般", "较差"];
+    const defaultAnalysis: AIAnalysis = {
+      summary: "暂无分析结果",
+      sleepQuality: "良好",
+      suggestions: "建议保持规律作息",
+    };
+
+    let analysis: AIAnalysis;
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
-    } catch {
+      if (!jsonMatch) {
+        console.warn("AI 响应未找到 JSON 格式，使用原始文本");
+        analysis = {
+          ...defaultAnalysis,
+          summary: text.slice(0, 200),
+        };
+      } else {
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        // 验证字段
+        analysis = {
+          summary: typeof parsed.summary === "string" ? parsed.summary : defaultAnalysis.summary,
+          sleepQuality: validQualities.includes(parsed.sleepQuality)
+            ? parsed.sleepQuality
+            : defaultAnalysis.sleepQuality,
+          suggestions: parsed.suggestions || defaultAnalysis.suggestions,
+        };
+
+        // 记录缺失字段警告
+        if (!parsed.summary) console.warn("AI 响应缺少 summary 字段");
+        if (!parsed.sleepQuality) console.warn("AI 响应缺少 sleepQuality 字段");
+        if (!parsed.suggestions) console.warn("AI 响应缺少 suggestions 字段");
+      }
+    } catch (parseError) {
+      console.warn("AI 响应 JSON 解析失败:", parseError);
       analysis = {
+        ...defaultAnalysis,
         summary: text.slice(0, 200),
-        sleepQuality: "良好",
-        suggestions: "建议保持规律作息",
       };
     }
 

@@ -9,7 +9,9 @@ import {
   FileText,
   Moon,
   Star,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -24,6 +26,8 @@ interface Report {
   createdAt: string;
 }
 
+type PageState = "loading" | "error" | "not_found" | "success";
+
 export default function ReportPage({
   params,
 }: {
@@ -31,7 +35,7 @@ export default function ReportPage({
 }) {
   const { id } = use(params);
   const [report, setReport] = useState<Report | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [pageState, setPageState] = useState<PageState>("loading");
 
   useEffect(() => {
     fetchReport();
@@ -40,20 +44,30 @@ export default function ReportPage({
 
   const fetchReport = async () => {
     try {
-      const res = await fetch("/api/reports");
+      const res = await fetch(`/api/reports/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setPageState("not_found");
+        } else {
+          throw new Error("网络请求失败");
+        }
+        return;
+      }
       const data = await res.json();
-      const found = data.reports?.find((r: Report) => r.id === id);
-      if (found) {
-        setReport(found);
+      if (data.report) {
+        setReport(data.report);
+        setPageState("success");
+      } else {
+        setPageState("not_found");
       }
     } catch (error) {
       console.error("Failed to fetch report:", error);
-    } finally {
-      setLoading(false);
+      setPageState("error");
+      toast.error("加载报告失败");
     }
   };
 
-  if (loading) {
+  if (pageState === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -64,7 +78,29 @@ export default function ReportPage({
     );
   }
 
-  if (!report) {
+  if (pageState === "error") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
+        <div className="text-center">
+          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive/50" />
+          <h2 className="mb-2 text-2xl font-semibold text-foreground">
+            加载失败
+          </h2>
+          <p className="text-muted-foreground">网络错误，请稍后重试</p>
+        </div>
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={() => fetchReport()}>
+            重新加载
+          </Button>
+          <Link href="/dashboard">
+            <Button>返回看板</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageState === "not_found" || !report) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
         <div className="text-center">

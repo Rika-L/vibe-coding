@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -16,7 +17,7 @@ export default function Home() {
 
   const handleUpload = async (file: File) => {
     if (!file.name.endsWith(".csv")) {
-      alert("请上传 CSV 文件");
+      toast.error("请上传 CSV 文件");
       return;
     }
 
@@ -33,13 +34,17 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success) {
-        alert(`成功导入 ${data.count} 条记录`);
+        if (data.failedCount > 0) {
+          toast.warning(`成功导入 ${data.count} 条记录，${data.failedCount} 条失败`);
+        } else {
+          toast.success(`成功导入 ${data.count} 条记录`);
+        }
         router.push("/dashboard");
       } else {
-        alert(data.error || "上传失败");
+        toast.error(data.error || "上传失败");
       }
     } catch (error) {
-      alert("上传出错，请重试");
+      toast.error("上传出错，请重试");
     } finally {
       setIsUploading(false);
     }

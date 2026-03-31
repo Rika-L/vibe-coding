@@ -49,10 +49,12 @@ export async function POST(request: NextRequest) {
     );
 
     const validRecords = records.filter((r): r is SleepRecord => r !== null);
+    const failedCount = parsedData.length - validRecords.length;
 
     return NextResponse.json({
       success: true,
       count: validRecords.length,
+      failedCount,
       records: validRecords,
     });
   } catch (error) {

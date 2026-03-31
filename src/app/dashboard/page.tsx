@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Sparkles,
@@ -10,7 +11,10 @@ import {
   TrendingUp,
   Database,
   Moon,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   SleepTrendChart,
   SleepStructureChart,
@@ -19,6 +23,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
+
+// 前端请求超时时间 (毫秒)
+const FETCH_TIMEOUT = 90000;
 
 interface SleepRecord {
   id: string;
@@ -31,9 +38,12 @@ interface SleepRecord {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
   const [records, setRecords] = useState<SleepRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeProgress, setAnalyzeProgress] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -41,26 +51,65 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
+      setLoadError(false);
       const res = await fetch("/api/sleep-data");
+      if (!res.ok) {
+        throw new Error("网络请求失败");
+      }
       const data = await res.json();
       setRecords(data.records || []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
   };
 
+  // 带超时的 fetch
+  const fetchWithTimeout = async (url: string, options: RequestInit, timeout: number) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const res = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return res;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("请求超时，请重试");
+      }
+      throw error;
+    }
+  };
+
   const handleAnalyze = async () => {
     setAnalyzing(true);
+    setAnalyzeProgress("正在分析数据...");
+
     try {
-      const res = await fetch("/api/analyze", { method: "POST" });
+      const res = await fetchWithTimeout(
+        "/api/analyze",
+        { method: "POST" },
+        FETCH_TIMEOUT
+      );
       const data = await res.json();
+
       if (data.report) {
-        window.location.href = `/report/${data.report.id}`;
+        setAnalyzeProgress("分析完成！");
+        toast.success("报告生成成功");
+        router.push(`/report/${data.report.id}`);
+      } else {
+        toast.error(data.error || "分析失败");
+        setAnalyzing(false);
       }
     } catch (error) {
-      alert("分析失败，请重试");
+      const message = error instanceof Error ? error.message : "分析失败，请重试";
+      toast.error(message);
       setAnalyzing(false);
     }
   };
@@ -71,6 +120,28 @@ export default function Dashboard() {
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
+        <div className="text-center">
+          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive/50" />
+          <h2 className="mb-2 text-2xl font-semibold text-foreground">
+            加载失败
+          </h2>
+          <p className="text-muted-foreground">网络错误，请稍后重试</p>
+        </div>
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={() => fetchData()}>
+            重新加载
+          </Button>
+          <Link href="/">
+            <Button>返回上传</Button>
+          </Link>
         </div>
       </div>
     );
@@ -93,9 +164,10 @@ export default function Dashboard() {
     );
   }
 
-  const avgScore =
-    records.reduce((sum, r) => sum + (r.sleepScore || 0), 0) /
-    records.filter((r) => r.sleepScore).length || 0;
+  const recordsWithScore = records.filter((r) => r.sleepScore !== null);
+  const avgScore = recordsWithScore.length > 0
+    ? records.reduce((sum, r) => sum + (r.sleepScore || 0), 0) / recordsWithScore.length
+    : 0;
 
   const chartData = records.map((r) => ({
     date: new Date(r.date).toLocaleDateString("zh-CN", {
@@ -114,9 +186,12 @@ export default function Dashboard() {
 
   const avgDuration =
     records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length;
-  const avgDeep =
-    records.reduce((sum, r) => sum + (r.deepSleep || 0), 0) /
-    records.filter((r) => r.deepSleep).length || 0;
+
+  const recordsWithDeep = records.filter((r) => r.deepSleep !== null);
+  const avgDeep = recordsWithDeep.length > 0
+    ? records.reduce((sum, r) => sum + (r.deepSleep || 0), 0) / recordsWithDeep.length
+    : 0;
+
   const dataCompleteness =
     (records.filter((r) => r.sleepScore).length / records.length) * 100;
 
@@ -141,8 +216,17 @@ export default function Dashboard() {
               disabled={analyzing}
               className="gap-2"
             >
-              <Sparkles className="h-4 w-4" />
-              {analyzing ? "分析中..." : "生成 AI 报告"}
+              {analyzing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {analyzeProgress || "分析中..."}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  生成 AI 报告
+                </>
+              )}
             </Button>
           </div>
         </div>

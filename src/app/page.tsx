@@ -126,35 +126,44 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
+    <div className="flex min-h-screen flex-col bg-linear-to-br from-background via-background to-primary/5">
       {/* Header */}
-      <header className="fixed top-0 right-0 z-50 flex items-center gap-2 p-4">
-        {checkingAuth ? null : user ? (
-          <>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="gap-2">
-                <LayoutDashboard className="h-4 w-4" />
-                看板
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-              <LogOut className="h-4 w-4" />
-              登出
-            </Button>
-          </>
-        ) : (
-          <Link href="/login">
-            <Button variant="outline" size="sm" className="gap-2">
-              <LogIn className="h-4 w-4" />
-              登录
-            </Button>
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+          <Link href="/" className="flex items-center gap-2 font-semibold text-foreground">
+            <Moon className="h-5 w-5 text-primary" />
+            <span>睡眠分析</span>
           </Link>
-        )}
-        <ThemeToggle />
+
+          <div className="flex items-center gap-2">
+            {checkingAuth ? null : user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button size="sm" className="gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    看板
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  登出
+                </Button>
+              </>
+            ) : (
+              <Link href="/login">
+                <Button size="sm" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  登录
+                </Button>
+              </Link>
+            )}
+            <ThemeToggle />
+          </div>
+        </div>
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-2xl text-center">
           {/* Hero Section */}
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
@@ -254,7 +263,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 w-full border-t border-border/50 bg-background/80 backdrop-blur-sm py-4">
+      <footer className="mt-auto border-t border-border/50 bg-background/80 backdrop-blur-sm py-4">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           睡眠质量分析平台 — 让每一夜都有好梦
         </div>

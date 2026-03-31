@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "姓名至少 2 个字符").max(50, "姓名最多 50 个字符").optional(),
+  name: z
+    .string()
+    .trim()
+    .max(50, "姓名最多 50 个字符")
+    .transform((val) => (val.length >= 2 ? val : undefined))
+    .optional(),
   email: z.string().email("请输入有效的邮箱地址"),
   password: z
     .string()

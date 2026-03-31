@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
 interface SleepRecord {
   id: string;
@@ -53,6 +54,7 @@ export default function HistoryPage() {
   });
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -286,7 +288,13 @@ export default function HistoryPage() {
                       {records.map((record) => (
                         <tr
                           key={record.id}
-                          className="border-b border-border/50 transition-colors hover:bg-muted/50"
+                          onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
+                          className={cn(
+                            "cursor-pointer border-b border-border/50 transition-all duration-200",
+                            record.id === selectedId
+                              ? "bg-primary/10 border-l-2 border-l-primary"
+                              : "hover:bg-muted/50"
+                          )}
                         >
                           <td className="px-4 py-3 text-sm">
                             {new Date(record.date).toLocaleDateString("zh-CN")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ export default function Home() {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
     if (!file.name.endsWith(".csv")) {
@@ -66,6 +68,13 @@ export default function Home() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       handleUpload(e.target.files[0]);
+    }
+  };
+
+  const handleButtonClick = () => {
+    if (!isUploading && inputRef.current) {
+      inputRef.current.value = ""; // 允许重复选择同一文件
+      inputRef.current.click();
     }
   };
 
@@ -134,23 +143,23 @@ export default function Home() {
                   </p>
                 </div>
 
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={handleChange}
-                    disabled={isUploading}
-                  />
-                  <Button
-                    size="lg"
-                    className="gap-2 px-8"
-                    disabled={isUploading}
-                  >
-                    <FileUp className="h-4 w-4" />
-                    选择文件
-                  </Button>
-                </label>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleChange}
+                  disabled={isUploading}
+                />
+                <Button
+                  size="lg"
+                  className="gap-2 px-8"
+                  disabled={isUploading}
+                  onClick={handleButtonClick}
+                >
+                  <FileUp className="h-4 w-4" />
+                  选择文件
+                </Button>
               </div>
             </CardContent>
           </Card>

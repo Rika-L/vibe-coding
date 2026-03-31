@@ -258,6 +258,7 @@ export default function HistoryPage() {
       }
 
       toast.success("记录已删除");
+      setDeleteRecordDialogOpen(false);
       fetchData();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "删除失败");

@@ -3,20 +3,25 @@
 ## TypeScript
 
 ### 类型定义
+
 - 避免 `any`，使用具体类型
 - 接口用于对象结构：`interface User { ... }`
-- 类型别名用于联合/交叉类型：`type Status = 'active' | 'inactive'`
-- 共享类型放在 `types/` 或 `@types/` 目录
+- 类型别名用于联合类型：`type Status = 'active' | 'inactive'`
+- 共享类型放在 `src/types/` 目录
 
 ### 命名规范
-- 组件：PascalCase（`UserProfile.tsx`）
-- 函数：camelCase（`getUserData`）
-- 常量：UPPER_SNAKE_CASE（`MAX_RETRY_COUNT`）
-- 文件：组件用 PascalCase，工具用 camelCase
+
+| 类型 | 规范 | 示例 |
+|------|------|------|
+| 组件 | PascalCase | `UserProfile.tsx` |
+| 函数 | camelCase | `getUserData` |
+| 常量 | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
+| 文件 | 组件用 PascalCase，工具用 camelCase |
 
 ## React
 
 ### 函数式组件
+
 ```tsx
 // 推荐
 export function MyComponent({ prop }: Props) {
@@ -28,24 +33,23 @@ export const MyComponent = ({ prop }: Props) => <div>{prop}</div>
 ```
 
 ### Hooks 规范
+
 - 只在顶层调用 Hooks
 - 只在 React 函数中调用 Hooks
 - 自定义 Hook 以 `use` 开头
 
 ### 条件渲染
+
 ```tsx
-// 推荐
 {isLoading && <Spinner />}
 {error && <ErrorMessage error={error} />}
-{data && <DataDisplay data={data} />}
-
-// 三元表达式
-{isLoading ? <Spinner /> : <Content />}
+{data ? <Content data={data} /> : <Empty />}
 ```
 
 ## 注释规范
 
 ### JSDoc（公共函数）
+
 ```tsx
 /**
  * 格式化日期
@@ -59,12 +63,14 @@ export function formatDate(date: Date | string, format = 'YYYY-MM-DD'): string {
 ```
 
 ### 行内注释（复杂逻辑）
+
 ```tsx
 // 计算折扣价格，超过100元打8折，否则打9折
 const finalPrice = price > 100 ? price * 0.8 : price * 0.9
 ```
 
 ### 避免无意义注释
+
 ```tsx
 // ❌ 不好
 // 设置 loading 为 true
@@ -75,36 +81,40 @@ setLoading(true)
 setLoading(true)
 ```
 
-## 文件结构
+## 项目特定规范
 
-```tsx
-// 1. 导入
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+### API 路由
 
-// 2. 类型定义
-interface Props {
-  // ...
+- 放在 `src/app/api/` 目录
+- 使用标准响应格式
+- 必须处理错误情况
+
+### 数据库操作
+
+- 使用 Prisma Client
+- 从 `@/lib/prisma` 导入
+
+```typescript
+import prisma from '@/lib/prisma'
+
+const user = await prisma.user.findUnique({ where: { id } })
+```
+
+### 认证检查
+
+```typescript
+import { getCurrentUser } from '@/lib/auth'
+
+const user = await getCurrentUser()
+if (!user) {
+  return Response.json({ error: '未登录' }, { status: 401 })
 }
+```
 
-// 3. 常量
-const MAX_COUNT = 10
+### AI 调用
 
-// 4. 组件/函数
-export function MyComponent({ }: Props) {
-  // 4.1 Hooks
-  const [state, setState] = useState()
+```typescript
+import { generateSleepAnalysis } from '@/lib/ai'
 
-  // 4.2 派生状态
-  const derived = useMemo(() => ..., [])
-
-  // 4.3 副作用
-  useEffect(() => {}, [])
-
-  // 4.4 事件处理
-  const handleClick = () => {}
-
-  // 4.5 渲染
-  return <div>...</div>
-}
+const result = await generateSleepAnalysis(prompt)
 ```

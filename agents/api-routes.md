@@ -1,0 +1,148 @@
+# API 路由规范
+
+## 认证 API
+
+### POST /api/auth/register
+
+用户注册
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "用户名"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "注册成功",
+  "user": { "id": "...", "email": "..." }
+}
+```
+
+### POST /api/auth/login
+
+用户登录，设置 `auth-token` Cookie
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+### POST /api/auth/logout
+
+退出登录，清除 Cookie
+
+### GET /api/auth/me
+
+获取当前登录用户信息
+
+**Response:**
+```json
+{
+  "userId": "...",
+  "email": "..."
+}
+```
+
+## 数据 API
+
+### POST /api/upload
+
+上传 CSV 文件
+
+**Request:** `FormData` with `file` field
+
+**Response:**
+```json
+{
+  "message": "上传成功",
+  "count": 30
+}
+```
+
+### GET /api/sleep-data
+
+获取睡眠数据列表
+
+**Query:** `?startDate=...&endDate=...`
+
+### GET /api/sleep-history
+
+获取当前用户的睡眠历史
+
+### POST /api/analyze
+
+AI 分析睡眠数据
+
+**Request:**
+```json
+{
+  "data": [...sleepRecords]
+}
+```
+
+**Response:**
+```json
+{
+  "analysis": "AI 分析结果..."
+}
+```
+
+### GET /api/reports
+
+获取分析报告列表
+
+### GET /api/reports/[id]
+
+获取单个报告详情
+
+## 路由规范
+
+### 响应格式
+
+成功：
+```json
+{ "message": "操作成功", "data": {...} }
+```
+
+错误：
+```json
+{ "error": "错误信息" }
+```
+
+### 认证检查
+
+需要认证的路由使用 `getCurrentUser()`:
+
+```typescript
+import { getCurrentUser } from '@/lib/auth'
+
+export async function GET(request: Request) {
+  const user = await getCurrentUser()
+  if (!user) {
+    return Response.json({ error: '未登录' }, { status: 401 })
+  }
+  // ...
+}
+```
+
+### 错误处理
+
+```typescript
+try {
+  // ...
+} catch (error) {
+  console.error('API Error:', error)
+  return Response.json(
+    { error: error instanceof Error ? error.message : '服务器错误' },
+    { status: 500 }
+  )
+}
+```

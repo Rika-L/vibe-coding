@@ -143,11 +143,11 @@ export function DateRangeDialog({
           {/* 日期范围选择器 */}
           <div className="flex items-center justify-center gap-2">
             <Popover>
-              <PopoverTrigger>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? format(dateRange.from, "yyyy/MM/dd") : "开始日期"}
-                </Button>
+              <PopoverTrigger render={
+                <Button variant="outline" className="w-full justify-start text-left font-normal" />
+              }>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange.from ? format(dateRange.from, "yyyy/MM/dd") : "开始日期"}
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
@@ -167,11 +167,11 @@ export function DateRangeDialog({
             <span className="text-muted-foreground">至</span>
 
             <Popover>
-              <PopoverTrigger>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.to ? format(dateRange.to, "yyyy/MM/dd") : "结束日期"}
-                </Button>
+              <PopoverTrigger render={
+                <Button variant="outline" className="w-full justify-start text-left font-normal" />
+              }>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange.to ? format(dateRange.to, "yyyy/MM/dd") : "结束日期"}
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar

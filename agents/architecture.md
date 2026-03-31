@@ -9,7 +9,9 @@ src/
 │   │   ├── auth/           # 认证相关 (login, register, logout, me)
 │   │   ├── analyze/        # AI 睡眠分析
 │   │   ├── upload/         # CSV 上传
-│   │   ├── sleep-data/     # 睡眠数据 CRUD
+│   │   ├── sleep-data/     # 睡眠数据查询
+│   │   ├── sleep-dates/    # 有记录的日期列表
+│   │   ├── sleep-records/  # 睡眠记录 CRUD
 │   │   ├── sleep-history/  # 历史记录
 │   │   └── reports/        # 分析报告
 │   ├── dashboard/          # 仪表盘页面
@@ -20,13 +22,19 @@ src/
 │   └── page.tsx            # 首页
 ├── components/
 │   ├── ui/                 # shadcn/ui 组件
-│   └── charts/             # 图表组件 (ECharts)
+│   ├── charts/             # 图表组件 (ECharts)
+│   ├── date-range-dialog.tsx    # 日期区间选择弹窗
+│   ├── sleep-record-dialog.tsx  # 睡眠记录编辑弹窗
+│   ├── ThemeScript.tsx     # 主题初始化
+│   └── theme-toggle.tsx    # 主题切换
 ├── lib/
 │   ├── auth.ts             # JWT 认证工具
 │   ├── prisma.ts           # Prisma 客户端
 │   ├── ai.ts               # AI 服务 (讯飞星火)
 │   ├── csv-parser.ts       # CSV 解析
-│   └── utils.ts            # 通用工具
+│   ├── utils.ts            # 通用工具
+│   └── validations/        # 验证逻辑
+│       └── auth.ts         # 认证验证
 ├── middleware.ts           # 路由守卫
 └── types/                  # TypeScript 类型
 
@@ -63,6 +71,7 @@ prisma/
 | sleepScore | Int? | 睡眠评分 |
 | heartRate | Int? | 心率 |
 | userId | String? | 关联用户 |
+| createdAt | DateTime | 创建时间 |
 
 ### AnalysisReport - 分析报告
 
@@ -74,6 +83,8 @@ prisma/
 | suggestions | String | 改善建议 |
 | sleepQuality | String | 睡眠质量评级 |
 | dataRange | String | 数据范围 |
+| userId | String? | 关联用户 |
+| createdAt | DateTime | 创建时间 |
 
 ## 认证流程
 

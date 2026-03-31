@@ -8,10 +8,11 @@
 
 **已安装组件：**
 - Button, Card, Switch, DropdownMenu
+- Input, Popover, Calendar, Dialog, AlertDialog
 
 **常用组件：**
 - 表单：Input, Textarea, Select, Checkbox, Form, Label
-- 反馈：Dialog, Sheet, Popover, Toast, Alert
+- 反馈：Dialog, Sheet, Popover, Toast, Alert, AlertDialog
 - 展示：Table, Tabs, Badge, Avatar
 
 ### 自定义组件
@@ -20,14 +21,16 @@
 
 ```
 components/
-├── ui/              # shadcn/ui 组件
-├── charts/          # 图表组件
-│   ├── index.ts     # 统一导出
+├── ui/                    # shadcn/ui 组件
+├── charts/                # 图表组件
+│   ├── index.ts           # 统一导出
 │   ├── SleepScoreGauge.tsx
 │   ├── SleepTrendChart.tsx
 │   └── SleepStructureChart.tsx
-├── ThemeScript.tsx
-└── theme-toggle.tsx
+├── ThemeScript.tsx        # 主题初始化脚本
+├── theme-toggle.tsx       # 主题切换按钮
+├── date-range-dialog.tsx  # 日期区间选择弹窗
+└── sleep-record-dialog.tsx # 睡眠记录编辑弹窗
 ```
 
 ## 图表组件

@@ -21,6 +21,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | [styling.md](agents/styling.md) | 样式规范 |
 | [code-standards.md](agents/code-standards.md) | 代码规范 |
 
+## 已实现功能
+
+### 核心功能
+- 用户认证（注册、登录、JWT）
+- CSV 睡眠数据上传与解析
+- 睡眠记录 CRUD（增删改查）
+- Dashboard 数据可视化（ECharts）
+- AI 睡眠分析（讯飞星火）
+- 历史分析报告查看
+
+### 交互功能
+- Dashboard 日期区间筛选
+- AI 分析日期区间选择
+- AlertDialog 确认弹窗
+- 睡眠记录编辑弹窗
+
 ## 核心原则
 
 1. **不要**随意删除现有代码
@@ -77,3 +93,27 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | 调试问题 | 使用 `superpowers:systematic-debugging` skill |
 | 新功能设计 | 使用 `superpowers:brainstorming` skill |
 | 代码审查 | 使用 `superpowers:requesting-code-review` skill |
+
+## API 路由速查
+
+| 路由 | 方法 | 用途 |
+|------|------|------|
+| `/api/auth/login` | POST | 登录 |
+| `/api/auth/register` | POST | 注册 |
+| `/api/auth/logout` | POST | 登出 |
+| `/api/auth/me` | GET | 获取当前用户 |
+| `/api/upload` | POST | 上传 CSV |
+| `/api/sleep-records` | GET/POST | 睡眠记录列表/创建 |
+| `/api/sleep-records/[id]` | PUT/DELETE | 更新/删除记录 |
+| `/api/sleep-dates` | GET | 获取有记录的日期 |
+| `/api/analyze` | POST | AI 分析 |
+| `/api/reports` | GET | 获取分析报告列表 |
+| `/api/reports/[id]` | GET | 获取报告详情 |
+
+## 常用命令
+
+```bash
+npm run dev      # 启动开发服务器
+npm run build    # 构建生产版本
+npx prisma studio # 打开数据库管理界面
+```

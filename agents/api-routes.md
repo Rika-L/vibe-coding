@@ -51,7 +51,7 @@
 }
 ```
 
-## 数据 API
+## 睡眠数据 API
 
 ### POST /api/upload
 
@@ -77,6 +77,52 @@
 
 获取当前用户的睡眠历史
 
+### GET /api/sleep-dates
+
+获取有睡眠记录的日期列表（用于日期选择器禁用日期）
+
+**Response:**
+```json
+{
+  "dates": ["2024-01-01", "2024-01-02", ...]
+}
+```
+
+### GET /api/sleep-records
+
+获取睡眠记录列表
+
+**Query:** `?startDate=...&endDate=...`
+
+### POST /api/sleep-records
+
+创建睡眠记录
+
+**Request:**
+```json
+{
+  "date": "2024-01-01",
+  "bedTime": "2024-01-01T23:00:00",
+  "wakeTime": "2024-01-02T07:00:00",
+  "sleepDuration": 8,
+  "deepSleep": 2,
+  "lightSleep": 4,
+  "remSleep": 1.5,
+  "awakeCount": 1,
+  "sleepScore": 85
+}
+```
+
+### PUT /api/sleep-records/[id]
+
+更新睡眠记录
+
+### DELETE /api/sleep-records/[id]
+
+删除睡眠记录
+
+## AI 分析 API
+
 ### POST /api/analyze
 
 AI 分析睡眠数据
@@ -84,7 +130,9 @@ AI 分析睡眠数据
 **Request:**
 ```json
 {
-  "data": [...sleepRecords]
+  "data": [...sleepRecords],
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31"
 }
 ```
 
@@ -94,6 +142,8 @@ AI 分析睡眠数据
   "analysis": "AI 分析结果..."
 }
 ```
+
+## 报告 API
 
 ### GET /api/reports
 

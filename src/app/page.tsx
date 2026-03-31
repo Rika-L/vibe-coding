@@ -81,13 +81,16 @@ export default function Home() {
         } else {
           toast.success(`成功导入 ${data.count} 条记录`);
         }
-        router.push("/dashboard");
+        // 延迟跳转，给用户反应时间
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
       } else {
         toast.error(data.error || "上传失败");
+        setIsUploading(false);
       }
     } catch {
       toast.error("上传出错，请重试");
-    } finally {
       setIsUploading(false);
     }
   };

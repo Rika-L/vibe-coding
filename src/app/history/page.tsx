@@ -13,10 +13,13 @@ import {
   Loader2,
   LogOut,
   AlertCircle,
+  Search,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 interface SleepRecord {
@@ -40,6 +43,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const [records, setRecords] = useState<SleepRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtering, setFiltering] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -83,6 +87,7 @@ export default function HistoryPage() {
       setLoadError(true);
     } finally {
       setLoading(false);
+      setFiltering(false);
     }
   }, [pagination.page, pagination.pageSize, startDate, endDate, router]);
 
@@ -106,6 +111,7 @@ export default function HistoryPage() {
 
   const handleFilter = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));
+    setFiltering(true);
     setLoading(true);
   };
 
@@ -183,32 +189,56 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-end gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium">
+              <div className="flex-1 min-w-[150px]">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
                   开始日期
                 </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="rounded-lg border border-border bg-background px-4 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium">
+              <div className="flex-1 min-w-[150px]">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
                   结束日期
                 </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="rounded-lg border border-border bg-background px-4 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <Button onClick={handleFilter}>筛选</Button>
-              <Button variant="outline" onClick={clearFilter}>
+              <Button onClick={handleFilter} disabled={filtering} className="gap-2">
+                {filtering ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    筛选中...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    筛选
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={clearFilter} className="gap-2">
+                <X className="h-4 w-4" />
                 清除
               </Button>
+              {pagination.total > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  找到 {pagination.total} 条记录
+                </span>
+              )}
             </div>
           </CardContent>
         </Card>

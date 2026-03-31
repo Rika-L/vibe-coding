@@ -1,24 +1,65 @@
 "use client";
 
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn } from "lucide-react";
+import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn, LogOut, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+interface User {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
 export default function Home() {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // 检查用户登录状态
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        // 未登录，忽略错误
+      })
+      .finally(() => {
+        setCheckingAuth(false);
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      toast.success("已登出");
+    } catch {
+      toast.error("登出失败");
+    }
+  };
 
   const handleUpload = async (file: File) => {
     if (!file.name.endsWith(".csv")) {
       toast.error("请上传 CSV 文件");
+      return;
+    }
+
+    if (!user) {
+      toast.error("请先登录");
+      router.push("/login");
       return;
     }
 
@@ -44,7 +85,7 @@ export default function Home() {
       } else {
         toast.error(data.error || "上传失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("上传出错，请重试");
     } finally {
       setIsUploading(false);
@@ -88,12 +129,27 @@ export default function Home() {
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
       {/* Header */}
       <header className="fixed top-0 right-0 z-50 flex items-center gap-2 p-4">
-        <Link href="/login">
-          <Button variant="outline" size="sm" className="gap-2">
-            <LogIn className="h-4 w-4" />
-            登录
-          </Button>
-        </Link>
+        {checkingAuth ? null : user ? (
+          <>
+            <Link href="/dashboard">
+              <Button variant="outline" size="sm" className="gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                看板
+              </Button>
+            </Link>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              登出
+            </Button>
+          </>
+        ) : (
+          <Link href="/login">
+            <Button variant="outline" size="sm" className="gap-2">
+              <LogIn className="h-4 w-4" />
+              登录
+            </Button>
+          </Link>
+        )}
         <ThemeToggle />
       </header>
 

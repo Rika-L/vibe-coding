@@ -15,7 +15,6 @@ import {
   AlertCircle,
   Search,
   X,
-  FileText,
   Sparkles,
   Trash2,
   Star,
@@ -24,6 +23,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +82,8 @@ export default function HistoryPage() {
   const [endDate, setEndDate] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -181,11 +192,16 @@ export default function HistoryPage() {
   };
 
   const handleDeleteReport = async (reportId: string) => {
-    if (!confirm("确定要删除这份报告吗？")) return;
+    setReportToDelete(reportId);
+    setDeleteDialogOpen(true);
+  };
 
-    setDeletingId(reportId);
+  const confirmDeleteReport = async () => {
+    if (!reportToDelete) return;
+
+    setDeletingId(reportToDelete);
     try {
-      const res = await fetch(`/api/reports/${reportId}`, {
+      const res = await fetch(`/api/reports/${reportToDelete}`, {
         method: "DELETE",
       });
 
@@ -200,6 +216,7 @@ export default function HistoryPage() {
       toast.error(error instanceof Error ? error.message : "删除失败");
     } finally {
       setDeletingId(null);
+      setReportToDelete(null);
     }
   };
 
@@ -588,6 +605,40 @@ export default function HistoryPage() {
           </Card>
         )}
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center pt-6 pb-2">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <Trash2 className="h-7 w-7 text-destructive" />
+            </div>
+            <AlertDialogHeader className="items-center text-center">
+              <AlertDialogTitle className="text-xl">确认删除报告？</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                删除后将无法恢复，该报告的所有数据将被永久移除。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteReport}
+              disabled={deletingId === reportToDelete}
+              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
+            >
+              {deletingId === reportToDelete ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  删除中...
+                </>
+              ) : (
+                "确认删除"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

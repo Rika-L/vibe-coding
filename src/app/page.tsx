@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SleepRecordDialog } from "@/components/sleep-record-dialog";
 
 interface User {
   id: string;
@@ -21,6 +22,7 @@ export default function Home() {
   const [dragActive, setDragActive] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -244,6 +246,24 @@ export default function Home() {
             </CardContent>
           </Card>
 
+          {/* Manual Add Entry */}
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            或{" "}
+            <button
+              onClick={() => {
+                if (!user) {
+                  toast.error("请先登录");
+                  router.push("/login");
+                  return;
+                }
+                setAddDialogOpen(true);
+              }}
+              className="text-primary hover:underline"
+            >
+              手动添加记录
+            </button>
+          </p>
+
           {/* Features */}
           <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
             <FeatureCard
@@ -271,6 +291,13 @@ export default function Home() {
           睡眠质量分析平台 — 让每一夜都有好梦
         </div>
       </footer>
+
+      {/* Add Record Dialog */}
+      <SleepRecordDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onSuccess={() => router.push("/history")}
+      />
     </div>
   );
 }

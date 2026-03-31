@@ -18,6 +18,7 @@ import {
   Sparkles,
   Trash2,
   Star,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SleepRecordDialog } from "@/components/sleep-record-dialog";
 import { cn } from "@/lib/utils";
 
 type TabType = "records" | "reports";
@@ -46,6 +48,10 @@ interface SleepRecord {
   lightSleep: number | null;
   remSleep: number | null;
   sleepScore: number | null;
+  bedTime?: string;
+  wakeTime?: string;
+  awakeCount?: number | null;
+  heartRate?: number | null;
 }
 
 interface AnalysisReport {
@@ -84,6 +90,9 @@ export default function HistoryPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteRecordDialogOpen, setDeleteRecordDialogOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<SleepRecord | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -217,6 +226,44 @@ export default function HistoryPage() {
     } finally {
       setDeletingId(null);
       setReportToDelete(null);
+    }
+  };
+
+  const handleEditRecord = (record: SleepRecord) => {
+    setSelectedRecord({
+      ...record,
+      bedTime: record.bedTime ? new Date(record.bedTime).toTimeString().slice(0, 5) : undefined,
+      wakeTime: record.wakeTime ? new Date(record.wakeTime).toTimeString().slice(0, 5) : undefined,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteRecord = (record: SleepRecord) => {
+    setSelectedRecord(record);
+    setDeleteRecordDialogOpen(true);
+  };
+
+  const confirmDeleteRecord = async () => {
+    if (!selectedRecord) return;
+
+    setDeletingId(selectedRecord.id);
+    try {
+      const res = await fetch(`/api/sleep-records/${selectedRecord.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "删除失败");
+      }
+
+      toast.success("记录已删除");
+      fetchData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "删除失败");
+    } finally {
+      setDeletingId(null);
+      setSelectedRecord(null);
     }
   };
 
@@ -409,6 +456,9 @@ export default function HistoryPage() {
                             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                               评分
                             </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                              操作
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -457,6 +507,31 @@ export default function HistoryPage() {
                                 ) : (
                                   "-"
                                 )}
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditRecord(record);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteRecord(record);
+                                    }}
+                                    className="text-muted-foreground hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -628,6 +703,48 @@ export default function HistoryPage() {
               className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
             >
               {deletingId === reportToDelete ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  删除中...
+                </>
+              ) : (
+                "确认删除"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Record Dialog */}
+      <SleepRecordDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        record={selectedRecord}
+        onSuccess={fetchData}
+      />
+
+      {/* Delete Record Confirmation Dialog */}
+      <AlertDialog open={deleteRecordDialogOpen} onOpenChange={setDeleteRecordDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center pt-6 pb-2">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <Trash2 className="h-7 w-7 text-destructive" />
+            </div>
+            <AlertDialogHeader className="items-center text-center">
+              <AlertDialogTitle className="text-xl">确认删除记录？</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                确定要删除这条睡眠记录吗？此操作无法撤销。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteRecord}
+              disabled={deletingId === selectedRecord?.id}
+              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
+            >
+              {deletingId === selectedRecord?.id ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   删除中...

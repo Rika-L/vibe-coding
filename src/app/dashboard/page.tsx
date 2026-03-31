@@ -15,6 +15,8 @@ import {
   AlertCircle,
   History,
   LogOut,
+  Search,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -24,6 +26,7 @@ import {
 } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DateRangeDialog } from "@/components/date-range-dialog";
 
@@ -48,15 +51,23 @@ export default function Dashboard() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [filtering, setFiltering] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (filterStart?: string, filterEnd?: string) => {
     try {
       setLoadError(false);
-      const res = await fetch("/api/sleep-data");
+      const params = new URLSearchParams();
+      if (filterStart) params.set("startDate", filterStart);
+      if (filterEnd) params.set("endDate", filterEnd);
+
+      const url = `/api/sleep-data${params.toString() ? `?${params}` : ""}`;
+      const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
           router.push("/login?redirect=/dashboard");
@@ -71,6 +82,7 @@ export default function Dashboard() {
       setLoadError(true);
     } finally {
       setLoading(false);
+      setFiltering(false);
     }
   };
 
@@ -82,6 +94,19 @@ export default function Dashboard() {
     } catch {
       toast.error("登出失败");
     }
+  };
+
+  const handleFilter = () => {
+    setFiltering(true);
+    setLoading(true);
+    fetchData(startDate, endDate);
+  };
+
+  const clearFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setLoading(true);
+    fetchData();
   };
 
   // 带超时的 fetch
@@ -266,6 +291,64 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Filter Section */}
+        <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardContent className="py-4">
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="flex-1 min-w-[150px]">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                  开始日期
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                  结束日期
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleFilter} disabled={filtering} className="gap-2">
+                {filtering ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    筛选中...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    筛选
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={clearFilter} className="gap-2">
+                <X className="h-4 w-4" />
+                清除
+              </Button>
+              {records.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  显示 {records.length} 条记录
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Stats Grid */}
         <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard

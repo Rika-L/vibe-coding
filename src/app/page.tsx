@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb } from "lucide-react";
+import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,7 +87,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
       {/* Header */}
-      <header className="fixed top-0 right-0 z-50 p-4">
+      <header className="fixed top-0 right-0 z-50 flex items-center gap-2 p-4">
+        <Link href="/login">
+          <Button variant="outline" size="sm" className="gap-2">
+            <LogIn className="h-4 w-4" />
+            登录
+          </Button>
+        </Link>
         <ThemeToggle />
       </header>
 

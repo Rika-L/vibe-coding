@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateSleepAnalysis } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 interface SleepRecord {
   date: Date;
@@ -14,7 +15,17 @@ interface SleepRecord {
 
 export async function POST() {
   try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "未登录" },
+        { status: 401 }
+      );
+    }
+
     const records = await prisma.sleepRecord.findMany({
+      where: { userId: user.userId },
       orderBy: { date: "asc" },
       take: 30,
     });

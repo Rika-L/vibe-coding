@@ -13,6 +13,8 @@ import {
   Moon,
   Loader2,
   AlertCircle,
+  History,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -54,6 +56,10 @@ export default function Dashboard() {
       setLoadError(false);
       const res = await fetch("/api/sleep-data");
       if (!res.ok) {
+        if (res.status === 401) {
+          router.push("/login?redirect=/dashboard");
+          return;
+        }
         throw new Error("网络请求失败");
       }
       const data = await res.json();
@@ -63,6 +69,16 @@ export default function Dashboard() {
       setLoadError(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      toast.success("已登出");
+      router.push("/login");
+    } catch {
+      toast.error("登出失败");
     }
   };
 
@@ -210,7 +226,16 @@ export default function Dashboard() {
           </h1>
 
           <div className="flex items-center gap-2">
+            <Link href="/history">
+              <Button variant="outline" size="sm" className="gap-2">
+                <History className="h-4 w-4" />
+                历史数据
+              </Button>
+            </Link>
             <ThemeToggle />
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+            </Button>
             <Button
               onClick={handleAnalyze}
               disabled={analyzing}

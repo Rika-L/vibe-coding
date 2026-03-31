@@ -70,3 +70,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ---
 请确认以上计划是否正确，或提出修改意见。
 ```
+
+checklist 必须本地保存一份 方便你自己查看 命名规则 为 `checklist-[需求名称]-时间.md`，例如 `checklist-user-authentication-2023-10-01.md`。

@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String?
+  createdAt    DateTime      @default(now())
+  sleepRecords SleepRecord[]
+
+  @@index([email])
+}
+
 model SleepRecord {
   id            String   @id @default(uuid())
   date          DateTime
@@ -20,8 +31,11 @@ model SleepRecord {
   sleepScore    Int?
   heartRate     Int?
   createdAt     DateTime @default(now())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
 
   @@index([date])
+  @@index([userId])
 }
 
 model AnalysisReport {

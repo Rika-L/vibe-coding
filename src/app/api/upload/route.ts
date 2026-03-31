@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseCSV } from "@/lib/csv-parser";
 import { prisma } from "@/lib/prisma";
 import { SleepRecord } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "未登录" },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -39,6 +49,7 @@ export async function POST(request: NextRequest) {
               awakeCount: item.awakeCount,
               sleepScore: item.sleepScore,
               heartRate: item.heartRate,
+              userId: user.userId,
             },
           });
         } catch (e) {

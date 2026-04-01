@@ -1,17 +1,31 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { ChatDialog } from './ChatDialog'
-import { MessageCircle } from 'lucide-react'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ChatDialog } from './ChatDialog';
+import { MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function ChatFloatingButton() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleClick = async () => {
+    // 检查登录状态
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) {
+      toast.error('请先登录');
+      router.push('/login');
+      return;
+    }
+    setOpen(true);
+  };
 
   return (
     <>
       <Button
-        onClick={() => setOpen(true)}
+        onClick={handleClick}
         size="icon"
         className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-lg"
       >
@@ -19,5 +33,5 @@ export function ChatFloatingButton() {
       </Button>
       <ChatDialog open={open} onOpenChange={setOpen} />
     </>
-  )
+  );
 }

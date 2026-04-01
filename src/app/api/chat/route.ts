@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return result.toTextStreamResponse();
+    return result.toDataStreamResponse();
   }
   catch (error) {
     console.error('Chat error:', error);

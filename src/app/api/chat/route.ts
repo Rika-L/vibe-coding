@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages, type UIMessage } from 'ai';
 import { xfyun } from '@/lib/ai-provider';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { messages, conversationId } = body;
+    const { messages, conversationId } = body as { messages: UIMessage[]; conversationId: string };
 
     if (!conversationId) {
       return new Response(JSON.stringify({ error: '缺少对话ID' }), {
@@ -51,10 +51,16 @@ export async function POST(request: Request) {
     // 保存用户消息
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role === 'user') {
+      // Extract text content from parts
+      const content = lastMessage.parts
+        .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+        .map(part => part.text)
+        .join('');
+
       await prisma.message.create({
         data: {
           role: 'user',
-          content: lastMessage.content,
+          content,
           conversationId,
         },
       });
@@ -63,7 +69,7 @@ export async function POST(request: Request) {
     const result = streamText({
       model: xfyun('astron-code-latest'),
       system: SYSTEM_PROMPT,
-      messages,
+      messages: await convertToModelMessages(messages),
       onFinish: async ({ text }) => {
         // 保存 AI 回复
         await prisma.message.create({
@@ -82,7 +88,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse();
   }
   catch (error) {
     console.error('Chat error:', error);

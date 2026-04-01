@@ -47,11 +47,37 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 工作流程
 
-### 新需求处理
+### 新需求开发流程（Worktree + PR + Code Review）
 
-1. 生成 Checklist 文档给用户确认
-2. 用户确认后按步骤实现
-3. 每完成一个功能提交一次
+**必须严格按以下流程执行：**
+
+1. **创建 Worktree**
+   - 使用 `superpowers:using-git-worktrees` skill 创建隔离工作树
+   - 每个需求在独立的 worktree 中开发，避免污染主分支
+
+2. **开发实现**
+   - 使用 `superpowers:brainstorming` skill 设计方案
+   - 使用 `best-minds` skill 思考关键决策
+   - 按步骤实现，每完成一个功能提交一次
+
+3. **发起 PR**
+   - 开发完成后，发起 Pull Request
+   - PR 标题格式：`<type>: <description>`
+
+4. **代码审查**
+   - 使用 `superpowers:requesting-code-review` skill
+   - **关键**：审查由**新的 agent 会话**执行，不带开发上下文
+   - 审查者只看 PR diff，模拟真实 Code Review 场景
+
+5. **合并到主分支**
+   - 审查通过后合并 PR
+   - 清理 worktree
+
+### 流程示意
+
+```
+新需求 → 创建 worktree → 开发 → 提交 PR → 新 agent 审查 → 合并 → 清理 worktree
+```
 
 ### Checklist 模板
 

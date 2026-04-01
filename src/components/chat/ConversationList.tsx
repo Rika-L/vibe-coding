@@ -114,12 +114,11 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
             )
           : (
               conversations.map(conv => (
-                <button
-                  type="button"
+                <div
                   key={conv.id}
                   onClick={() => onSelect(conv.id)}
                   className={cn(
-                    'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 group transition-colors',
+                    'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 group transition-colors cursor-pointer',
                     selectedId === conv.id
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-muted',
@@ -137,7 +136,7 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
-                </button>
+                </div>
               ))
             )}
       </div>

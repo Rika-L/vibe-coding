@@ -15,6 +15,7 @@ model User {
   createdAt       DateTime          @default(now())
   sleepRecords    SleepRecord[]
   analysisReports AnalysisReport[]
+  conversations   Conversation[]
 
   @@index([email])
 }
@@ -51,4 +52,27 @@ model AnalysisReport {
   user         User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  title     String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  role           String       // "user" | "assistant"
+  content        String
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
 }

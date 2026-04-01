@@ -7,7 +7,7 @@ const protectedPaths = ['/dashboard', '/history', '/report'];
 // 认证页面（已登录时重定向）
 const authPages = ['/login', '/register'];
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('auth-token')?.value;
 

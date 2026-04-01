@@ -153,6 +153,59 @@ AI 分析睡眠数据
 
 获取单个报告详情
 
+## AI 聊天 API
+
+### POST /api/chat
+
+AI 聊天（流式输出）
+
+**Request:**
+```json
+{
+  "messages": [
+    { "id": "...", "role": "user", "parts": [{ "type": "text", "text": "你好" }] }
+  ],
+  "conversationId": "..."
+}
+```
+
+**Response:** Server-Sent Events (SSE) 流式响应
+
+### GET /api/conversations
+
+获取对话列表
+
+**Response:**
+```json
+{
+  "conversations": [
+    { "id": "...", "title": "新对话", "createdAt": "...", "updatedAt": "..." }
+  ]
+}
+```
+
+### POST /api/conversations
+
+创建新对话
+
+**Request:**
+```json
+{ "title": "新对话" }
+```
+
+**Response:**
+```json
+{ "conversation": { "id": "...", "title": "新对话" } }
+```
+
+### GET /api/conversations/[id]
+
+获取对话详情（包含消息）
+
+### DELETE /api/conversations/[id]
+
+删除对话
+
 ## 路由规范
 
 ### 请求验证

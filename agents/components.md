@@ -28,6 +28,13 @@ components/
 │   ├── SleepScoreGauge.tsx
 │   ├── SleepTrendChart.tsx
 │   └── SleepStructureChart.tsx
+├── chat/                  # AI 聊天组件
+│   ├── index.ts           # 统一导出
+│   ├── ChatDialog.tsx     # 聊天弹窗主组件
+│   ├── ChatMessages.tsx   # 消息列表（支持流式）
+│   ├── ChatInput.tsx      # 输入框
+│   ├── ConversationList.tsx # 对话列表
+│   └── ChatFloatingButton.tsx # 全局浮动按钮
 ├── ThemeScript.tsx        # 主题初始化脚本
 ├── theme-toggle.tsx       # 主题切换按钮
 ├── date-range-dialog.tsx  # 日期区间选择弹窗
@@ -114,3 +121,31 @@ const handleSubmit = () => {
 <Input className={errors.email ? "border-destructive" : ""} />
 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
 ```
+
+## AI 聊天组件
+
+### 流式输出
+
+`ChatMessages` 组件直接接收 `UIMessage[]` 类型，支持流式渲染：
+
+```tsx
+import type { UIMessage } from 'ai'
+
+interface ChatMessagesProps {
+  messages: UIMessage[]
+  isLoading: boolean
+}
+
+// 渲染时遍历 message.parts
+{message.parts.map((part, i) => {
+  if (part.type === 'text') {
+    return <div key={i}>{part.text}</div>
+  }
+})}
+```
+
+### 注意事项
+
+1. **不要转换消息格式**：直接传递 `useChat` 返回的 `messages`，不要转换为静态字符串
+2. **使用 UIMessage 类型**：从 `ai` 包导入 `UIMessage` 类型
+3. **流式响应**：后端使用 `streamText().toUIMessageStreamResponse()` 返回流式响应

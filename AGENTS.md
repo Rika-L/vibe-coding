@@ -32,6 +32,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - AI 睡眠分析（讯飞星火）
 - 历史分析报告查看
 
+### AI 聊天功能
+- AI 睡眠专家对话（流式输出）
+- 对话历史管理（创建、切换、删除）
+- 对话消息持久化存储
+
 ### 交互功能
 - Dashboard 日期区间筛选
 - AI 分析日期区间选择
@@ -71,10 +76,38 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - 审查通过后合并到 main 分支
    - 清理 worktree
 
+### Bug 修复流程（Worktree + Systematic Debugging）
+
+**必须严格按以下流程执行：**
+
+1. **创建 Worktree**
+   - 使用 `superpowers:using-git-worktrees` skill 创建隔离工作树
+   - 避免在主分支上进行调试
+
+2. **系统性调试**
+   - 使用 `superpowers:systematic-debugging` skill
+   - **核心原则**：先找到根本原因，再修复
+   - 禁止猜测性修复
+
+3. **调试四阶段**
+   - Phase 1: 根因调查（读错误、复现、检查变更、收集证据）
+   - Phase 2: 模式分析（找正常案例、对比差异）
+   - Phase 3: 假设验证（单一假设、最小测试）
+   - Phase 4: 实现修复（写测试、修复、验证）
+
+4. **代码审查**
+   - 使用 `superpowers:requesting-code-review` skill
+   - 由新的 agent 会话执行审查
+
+5. **合并与清理**
+   - 审查通过后合并到 main 分支
+   - 清理 worktree
+
 ### 流程示意
 
 ```
 新需求 → 创建 worktree → 开发 → 新 agent 审查 → 合并 → 清理 worktree
+Bug修复 → 创建 worktree → 系统调试 → 修复 → 新 agent 审查 → 合并 → 清理 worktree
 ```
 
 ### Checklist 模板
@@ -131,6 +164,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | `/api/sleep-records/[id]` | PUT/DELETE | 更新/删除记录 |
 | `/api/analyze` | POST | AI 分析 |
 | `/api/reports` | GET | 分析报告列表 |
+| `/api/chat` | POST | AI 聊天（流式） |
+| `/api/conversations` | GET/POST | 对话列表/创建 |
+| `/api/conversations/[id]` | GET/DELETE | 对话详情/删除 |
 
 ## 常用命令
 

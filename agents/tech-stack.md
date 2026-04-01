@@ -37,8 +37,11 @@
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
-| openai | 6.33.0 | 讯飞星火 API 客户端 |
-| ai | 6.0.141 | AI SDK |
+| ai | 6.0.141 | AI SDK 核心 |
+| @ai-sdk/react | 3.0.144 | React Hooks (useChat) |
+| @ai-sdk/openai | - | OpenAI 兼容 Provider |
+
+**注意**：AI SDK 5.0+ 默认使用 Responses API，讯飞星火只支持 Chat Completions API，需要使用 `.chat()` 方法显式指定。
 
 ## 数据处理
 

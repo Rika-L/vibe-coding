@@ -21,6 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { sleepRecordSchema, type SleepRecordInput } from "@/lib/validations/auth";
 
 interface SleepRecord {
   id?: string;
@@ -51,6 +52,7 @@ export function SleepRecordDialog({
 }: SleepRecordDialogProps) {
   const isEdit = !!record?.id;
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<SleepRecord>({
     date: format(new Date(), "yyyy-MM-dd"),
     sleepDuration: 7,
@@ -88,11 +90,20 @@ export function SleepRecordDialog({
   }, [record, open]);
 
   const handleSubmit = async () => {
-    if (!formData.date || !formData.sleepDuration) {
-      toast.error("请填写日期和睡眠时长");
+    const result = sleepRecordSchema.safeParse(formData as SleepRecordInput);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          fieldErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("请检查表单中的错误");
       return;
     }
 
+    setErrors({});
     setLoading(true);
     try {
       const url = isEdit ? `/api/sleep-records/${record?.id}` : "/api/sleep-records";
@@ -101,7 +112,7 @@ export function SleepRecordDialog({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(result.data),
       });
 
       const data = await res.json();
@@ -144,23 +155,28 @@ export function SleepRecordDialog({
             <label className="text-right text-sm font-medium">
               日期 <span className="text-destructive">*</span>
             </label>
-            <Popover>
-              <PopoverTrigger render={
-                <Button variant="outline" className="col-span-3 justify-start text-left font-normal" />
-              }>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.date ? format(new Date(formData.date), "yyyy年MM月dd日", { locale: zhCN }) : "选择日期"}
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.date ? new Date(formData.date) : undefined}
-                  onSelect={(date) => date && updateField("date", format(date, "yyyy-MM-dd"))}
-                  disabled={(date) => date > new Date()}
-                  locale={zhCN}
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="col-span-3">
+              <Popover>
+                <PopoverTrigger render={
+                  <Button variant="outline" className="w-full justify-start text-left font-normal" />
+                }>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.date ? format(new Date(formData.date), "yyyy年MM月dd日", { locale: zhCN }) : "选择日期"}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date ? new Date(formData.date) : undefined}
+                    onSelect={(date) => date && updateField("date", format(date, "yyyy-MM-dd"))}
+                    disabled={(date) => date > new Date()}
+                    locale={zhCN}
+                  />
+                </PopoverContent>
+              </Popover>
+              {errors.date && (
+                <p className="mt-1 text-sm text-destructive">{errors.date}</p>
+              )}
+            </div>
           </div>
 
           {/* 睡眠时长 */}
@@ -168,15 +184,20 @@ export function SleepRecordDialog({
             <label className="text-right text-sm font-medium">
               睡眠时长 <span className="text-destructive">*</span>
             </label>
-            <Input
-              type="number"
-              step="0.1"
-              min="0"
-              value={formData.sleepDuration}
-              onChange={(e) => updateField("sleepDuration", parseFloat(e.target.value) || 0)}
-              className="col-span-3"
-              placeholder="小时"
-            />
+            <div className="col-span-3">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                value={formData.sleepDuration}
+                onChange={(e) => updateField("sleepDuration", parseFloat(e.target.value) || 0)}
+                className={errors.sleepDuration ? "border-destructive" : ""}
+                placeholder="小时"
+              />
+              {errors.sleepDuration && (
+                <p className="mt-1 text-sm text-destructive">{errors.sleepDuration}</p>
+              )}
+            </div>
           </div>
 
           {/* 入睡时间 */}

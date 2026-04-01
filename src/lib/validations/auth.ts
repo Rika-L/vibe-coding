@@ -19,5 +19,19 @@ export const loginSchema = z.object({
   password: z.string().min(1, "请输入密码"),
 });
 
+export const sleepRecordSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "请选择有效日期"),
+  sleepDuration: z.number().positive("睡眠时长必须大于 0").max(24, "睡眠时长不能超过 24 小时"),
+  bedTime: z.string().regex(/^\d{2}:\d{2}$/, "请输入有效时间").optional().or(z.literal("")),
+  wakeTime: z.string().regex(/^\d{2}:\d{2}$/, "请输入有效时间").optional().or(z.literal("")),
+  deepSleep: z.number().min(0).max(24).nullable().optional(),
+  lightSleep: z.number().min(0).max(24).nullable().optional(),
+  remSleep: z.number().min(0).max(24).nullable().optional(),
+  awakeCount: z.number().int().min(0).nullable().optional(),
+  sleepScore: z.number().int().min(0).max(100).nullable().optional(),
+  heartRate: z.number().int().min(30).max(200).nullable().optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type SleepRecordInput = z.infer<typeof sleepRecordSchema>;

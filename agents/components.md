@@ -31,7 +31,8 @@ components/
 ├── ThemeScript.tsx        # 主题初始化脚本
 ├── theme-toggle.tsx       # 主题切换按钮
 ├── date-range-dialog.tsx  # 日期区间选择弹窗
-└── sleep-record-dialog.tsx # 睡眠记录编辑弹窗
+├── sleep-record-dialog.tsx # 睡眠记录编辑弹窗
+└── canvas-background.tsx  # 首页 Hero 区域夜空动画背景
 ```
 
 ## 图表组件

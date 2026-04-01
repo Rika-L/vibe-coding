@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id              String            @id @default(uuid())
-  email           String            @unique
+  id              String           @id @default(uuid())
+  email           String           @unique
   password        String
   name            String?
-  createdAt       DateTime          @default(now())
-  sleepRecords    SleepRecord[]
+  createdAt       DateTime         @default(now())
   analysisReports AnalysisReport[]
+  conversations   Conversation[]
+  sleepRecords    SleepRecord[]
 
   @@index([email])
 }
@@ -51,4 +52,27 @@ model AnalysisReport {
   user         User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  title     String
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  role           String
+  content        String
+  conversationId String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
 }

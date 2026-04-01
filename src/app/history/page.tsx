@@ -331,7 +331,7 @@ export default function HistoryPage() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <Button variant="outline" size="sm" onClick={handleLogout} aria-label="登出">
               <LogOut className="mr-2 h-4 w-4" />
               登出
             </Button>

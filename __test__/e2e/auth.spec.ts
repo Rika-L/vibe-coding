@@ -200,6 +200,14 @@ test.describe("Authentication Flow", () => {
       // Wait for page to load (loading state should complete)
       await expect(page.locator("text=加载中")).not.toBeVisible({ timeout: 10000 });
 
+      // Check if we have data - header is only shown when there's data
+      const hasData = await page.locator("text=睡眠数据看板").isVisible();
+      if (!hasData) {
+        // Navigate to history page which always has logout button
+        await page.goto("/history");
+        await expect(page.locator("text=加载中")).not.toBeVisible({ timeout: 10000 });
+      }
+
       // Click logout button
       await page.locator('button[aria-label="登出"]').click();
 
@@ -219,8 +227,16 @@ test.describe("Authentication Flow", () => {
       // Wait for page to load
       await expect(page.locator("text=加载中")).not.toBeVisible({ timeout: 10000 });
 
+      // Check if we have data - header is only shown when there's data
+      const hasData = await page.locator("text=睡眠数据看板").isVisible();
+      if (!hasData) {
+        // Navigate to history page which always has logout button
+        await page.goto("/history");
+        await expect(page.locator("text=加载中")).not.toBeVisible({ timeout: 10000 });
+      }
+
       // Logout
-      await page.locator('button:has([data-lucide="log-out"])').click();
+      await page.locator('button[aria-label="登出"]').click();
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
 
       // Try to access dashboard

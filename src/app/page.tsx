@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SleepRecordDialog } from '@/components/sleep-record-dialog';
+import { CanvasBackground } from '@/components/canvas-background';
 
 interface User {
   id: string;
@@ -137,7 +138,12 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-linear-to-br from-background via-background to-primary/5">
+    <div className="relative flex min-h-screen flex-col">
+      {/* Canvas 背景 - 仅覆盖 Hero 区域 */}
+      <div className="absolute inset-0 h-[70vh] overflow-hidden">
+        <CanvasBackground className="h-full w-full" />
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
@@ -178,7 +184,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container relative z-10 mx-auto px-4 py-8">
         <div className="mx-auto max-w-2xl text-center">
           {/* Hero Section */}
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">

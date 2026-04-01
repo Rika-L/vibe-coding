@@ -3,6 +3,11 @@ import { describe, it, expect, afterEach, vi, beforeAll } from 'vitest'
 import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
+// Set test database URL before creating PrismaClient
+// This must happen before any PrismaClient is instantiated
+process.env.DATABASE_URL = `file:${process.cwd()}/prisma/test.db`
+process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing'
+
 // Create a test prisma client before any imports that use it
 const testPrisma = new PrismaClient()
 

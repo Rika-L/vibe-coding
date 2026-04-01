@@ -44,6 +44,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 3. **不要**在 `node_modules` 中修改文件
 4. 不确定时，先询问用户
 5. 完成功能后清除不必要的上下文，避免 AI 幻觉
+6. 完成大功能需求后，及时更新 `agents/` 目录下的相关文档
 
 ## 工作流程
 

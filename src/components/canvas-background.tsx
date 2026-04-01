@@ -18,7 +18,6 @@ interface Nebula {
   x: number;
   y: number;
   radius: number;
-  color: string;
   opacity: number;
   driftX: number;
   driftY: number;
@@ -34,7 +33,6 @@ interface Meteor {
   opacity: number;
   angle: number;
   active: boolean;
-  tail: { x: number; y: number; opacity: number }[];
 }
 
 // 主题颜色配置
@@ -83,8 +81,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
       nebulas.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 100 + 80,
-        color: COLORS.light.nebula,
+        radius: Math.random() * 200 + 100, // 100-300px per spec
         opacity: Math.random() * 0.08 + 0.03,
         driftX: (Math.random() - 0.5) * 0.1,
         driftY: (Math.random() - 0.5) * 0.1,
@@ -108,7 +105,6 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
       opacity: Math.random() * 0.5 + 0.4,
       angle: Math.PI / 4 + (Math.random() - 0.5) * 0.2, // 约 45 度角
       active: true,
-      tail: [],
     };
   }, []);
 
@@ -160,6 +156,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
   // 生成星星
   const generateStars = useCallback((width: number, height: number): Star[] => {
     const stars: Star[] = [];
+    // 密度因子：每 8000 像素一颗星星
     const baseCount = Math.floor((width * height) / 8000);
 
     // 远景星星
@@ -182,7 +179,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
       stars.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        size: Math.random() * 2 + 1.5,
+        size: Math.random() * 2 + 2, // 2-4px per spec
         opacity: Math.random() * 0.4 + 0.4,
         twinkleSpeed: Math.random() * 0.03 + 0.01,
         twinklePhase: Math.random() * Math.PI * 2,

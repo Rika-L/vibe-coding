@@ -72,6 +72,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
   const nextMeteorTimeRef = useRef(0);
   const isVisibleRef = useRef(true);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isDarkRef = useRef(getIsDark());
 
   // 生成星云
   const generateNebulas = useCallback((width: number, height: number): Nebula[] => {
@@ -340,7 +341,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     if (!canvas || !ctx) return;
 
     const time = Date.now() / 1000;
-    const isDark = getIsDark();
+    const isDark = isDarkRef.current; // 使用 ref 而非函数调用
 
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -392,6 +393,22 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [animate]);
+
+  // 监听主题变化
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      isDarkRef.current = getIsDark();
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   // 初始化
   useEffect(() => {

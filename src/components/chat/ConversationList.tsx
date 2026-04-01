@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Plus, Trash2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -24,6 +34,8 @@ interface ConversationListProps {
 export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
 
   const fetchConversations = async () => {
     try {
@@ -46,27 +58,32 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
     fetchConversations();
   }, [refreshTrigger]);
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setConversationToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
-    if (!confirm('确定要删除这个对话吗？'))
-      return;
+  const confirmDelete = async () => {
+    if (!conversationToDelete) return;
 
     try {
-      const res = await fetch(`/api/conversations/${id}`, {
+      const res = await fetch(`/api/conversations/${conversationToDelete}`, {
         method: 'DELETE',
       });
-      if (!res.ok)
-        throw new Error('删除失败');
+      if (!res.ok) throw new Error('删除失败');
       toast.success('对话已删除');
       fetchConversations();
-      if (selectedId === id) {
+      if (selectedId === conversationToDelete) {
         onNew();
       }
     }
     catch (error) {
       console.error('Delete conversation error:', error);
       toast.error('删除对话失败');
+    }
+    finally {
+      setConversationToDelete(null);
     }
   };
 
@@ -112,7 +129,7 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
                   <span className="flex-1 truncate">{conv.title}</span>
                   <button
                     type="button"
-                    onClick={e => handleDelete(conv.id, e)}
+                    onClick={e => handleDeleteClick(conv.id, e)}
                     className={cn(
                       'opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/20',
                       selectedId === conv.id && 'hover:bg-primary-foreground/20',
@@ -124,6 +141,32 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
               ))
             )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center pt-6 pb-2">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <Trash2 className="h-7 w-7 text-destructive" />
+            </div>
+            <AlertDialogHeader className="items-center text-center">
+              <AlertDialogTitle className="text-xl">确认删除对话？</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                删除后将无法恢复，该对话的所有消息将被永久移除。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -47,4 +47,8 @@ next-env.d.ts
 
 # prisma
 prisma/dev.db-journal
-playwright-report/\ntest-results/\ncoverage/
+
+# test artifacts
+playwright-report/
+test-results/
+coverage/

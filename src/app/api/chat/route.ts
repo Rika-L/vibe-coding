@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages, type UIMessage } from 'ai';
+import { streamText, type UIMessage } from 'ai';
 import { xfyun } from '@/lib/ai-provider';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
@@ -66,10 +66,19 @@ export async function POST(request: Request) {
       });
     }
 
+    // 转换消息格式为简单字符串格式
+    const simpleMessages = messages.map(m => ({
+      role: m.role,
+      content: m.parts
+        .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+        .map(p => p.text)
+        .join(''),
+    }));
+
     const result = streamText({
       model: xfyun('astron-code-latest'),
       system: SYSTEM_PROMPT,
-      messages: await convertToModelMessages(messages),
+      messages: simpleMessages,
       onFinish: async ({ text }) => {
         // 保存 AI 回复
         await prisma.message.create({

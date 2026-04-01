@@ -83,6 +83,22 @@ setLoading(true)
 
 ## 项目特定规范
 
+### 表单验证
+
+使用 Zod 定义验证 schema：
+
+```typescript
+// src/lib/validations/auth.ts
+import { z } from "zod"
+
+export const loginSchema = z.object({
+  email: z.string().email("请输入有效的邮箱地址"),
+  password: z.string().min(1, "请输入密码"),
+})
+
+export type LoginInput = z.infer<typeof loginSchema>
+```
+
 ### API 路由
 
 - 放在 `src/app/api/` 目录

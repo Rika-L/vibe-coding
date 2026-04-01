@@ -124,19 +124,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## API 路由速查
 
+详细规范见 [api-routes.md](agents/api-routes.md)
+
 | 路由 | 方法 | 用途 |
 |------|------|------|
-| `/api/auth/login` | POST | 登录 |
-| `/api/auth/register` | POST | 注册 |
-| `/api/auth/logout` | POST | 登出 |
-| `/api/auth/me` | GET | 获取当前用户 |
-| `/api/upload` | POST | 上传 CSV |
+| `/api/auth/*` | - | 认证（登录/注册/登出） |
 | `/api/sleep-records` | GET/POST | 睡眠记录列表/创建 |
 | `/api/sleep-records/[id]` | PUT/DELETE | 更新/删除记录 |
-| `/api/sleep-dates` | GET | 获取有记录的日期 |
 | `/api/analyze` | POST | AI 分析 |
-| `/api/reports` | GET | 获取分析报告列表 |
-| `/api/reports/[id]` | GET | 获取报告详情 |
+| `/api/reports` | GET | 分析报告列表 |
 
 ## 常用命令
 

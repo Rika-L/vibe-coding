@@ -155,6 +155,27 @@ AI 分析睡眠数据
 
 ## 路由规范
 
+### 请求验证
+
+使用 Zod 进行请求体验证：
+
+```typescript
+import { sleepRecordSchema } from '@/lib/validations/auth'
+
+export async function POST(request: Request) {
+  const body = await request.json()
+  const result = sleepRecordSchema.safeParse(body)
+
+  if (!result.success) {
+    return Response.json(
+      { error: result.error.issues[0].message },
+      { status: 400 }
+    )
+  }
+  // 使用 result.data
+}
+```
+
 ### 响应格式
 
 成功：

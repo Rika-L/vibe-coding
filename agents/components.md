@@ -7,8 +7,9 @@
 添加组件：`npx shadcn@latest add <component>`
 
 **已安装组件：**
-- Button, Card, Switch, DropdownMenu
+- Button, Card, Switch, DropdownMenu, Tooltip, Progress
 - Input, Popover, Calendar, Dialog, AlertDialog
+- Label, Select, Checkbox
 
 **常用组件：**
 - 表单：Input, Textarea, Select, Checkbox, Form, Label
@@ -85,3 +86,30 @@ export function MyComponent({ title, onClick }: Props) {
 3. **受控组件**：优先使用受控组件
 4. **类型安全**：所有 props 必须有类型定义
 5. **命名导出**：使用 `export function` 而非 `export default`
+
+## 表单验证
+
+使用 Zod 进行表单验证，错误信息显示在字段下方：
+
+```tsx
+const [errors, setErrors] = useState<Record<string, string>>({})
+
+const handleSubmit = () => {
+  const result = schema.safeParse(formData)
+  if (!result.success) {
+    const fieldErrors: Record<string, string> = {}
+    result.error.issues.forEach((issue) => {
+      if (issue.path[0]) {
+        fieldErrors[issue.path[0] as string] = issue.message
+      }
+    })
+    setErrors(fieldErrors)
+    return
+  }
+  // 提交 result.data
+}
+
+// 渲染时显示错误
+<Input className={errors.email ? "border-destructive" : ""} />
+{errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+```

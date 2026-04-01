@@ -13,15 +13,24 @@
 ```tsx
 // 布局
 flex, grid, gap-4, p-4, m-4
+container, mx-auto, max-w-md
 
 // 文字
 text-sm, text-lg, font-bold, text-center
+text-muted-foreground, text-destructive
 
 // 颜色
 bg-primary, text-muted-foreground, border-border
+bg-card, text-card-foreground
 
 // 圆角/阴影
 rounded-lg, shadow-md
+
+// 状态
+hover:bg-primary/90, focus:ring-2, disabled:opacity-50
+
+// 响应式
+sm:text-lg, md:grid-cols-2, lg:flex-row
 ```
 
 ## 设计系统

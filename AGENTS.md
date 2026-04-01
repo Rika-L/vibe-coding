@@ -43,6 +43,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 2. **不要**提交敏感信息（API Key、密码等）
 3. **不要**在 `node_modules` 中修改文件
 4. 不确定时，先询问用户
+5. 完成功能后清除不必要的上下文，避免 AI 幻觉
 
 ## 工作流程
 
@@ -93,6 +94,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | 调试问题 | 使用 `superpowers:systematic-debugging` skill |
 | 新功能设计 | 使用 `superpowers:brainstorming` skill |
 | 代码审查 | 使用 `superpowers:requesting-code-review` skill |
+| 新需求思考 | 使用 `best-minds` skill 模拟专家思维 |
 
 ## API 路由速查
 

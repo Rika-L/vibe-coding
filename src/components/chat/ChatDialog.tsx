@@ -1,28 +1,28 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback } from 'react'
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { useState, useEffect, useCallback } from 'react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { ConversationList } from './ConversationList'
-import { ChatMessages, type Message } from './ChatMessages'
-import { ChatInput } from './ChatInput'
-import { toast } from 'sonner'
+} from '@/components/ui/dialog';
+import { ConversationList } from './ConversationList';
+import { ChatMessages } from './ChatMessages';
+import { ChatInput } from './ChatInput';
+import { toast } from 'sonner';
 
 interface ChatDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
-  const [conversationId, setConversationId] = useState<string | null>(null)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [input, setInput] = useState('')
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [input, setInput] = useState('');
 
   const {
     messages,
@@ -33,39 +33,29 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
     transport: new DefaultChatTransport({
       api: '/api/chat',
     }),
-  })
+  });
 
-  const isLoading = status === 'streaming' || status === 'submitted'
-
-  // Convert UIMessage to local Message format for ChatMessages component
-  const localMessages: Message[] = messages.map((m) => ({
-    id: m.id,
-    role: m.role as 'user' | 'assistant',
-    content: m.parts
-      .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
-      .map(part => part.text)
-      .join(''),
-  }))
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   // 加载对话历史
   const loadConversation = useCallback(async (id: string) => {
     try {
-      const res = await fetch(`/api/conversations/${id}`)
+      const res = await fetch(`/api/conversations/${id}`);
       if (!res.ok)
-        throw new Error('加载对话失败')
-      const data = await res.json()
+        throw new Error('加载对话失败');
+      const data = await res.json();
       setMessages(data.conversation.messages.map((m: { id: string; role: string; content: string }) => ({
         id: m.id || crypto.randomUUID(),
         role: m.role as 'user' | 'assistant',
         parts: [{ type: 'text' as const, text: m.content }],
-      })))
-      setConversationId(id)
+      })));
+      setConversationId(id);
     }
     catch (error) {
-      console.error('Load conversation error:', error)
-      toast.error('加载对话失败')
+      console.error('Load conversation error:', error);
+      toast.error('加载对话失败');
     }
-  }, [setMessages])
+  }, [setMessages]);
 
   // 创建新对话
   const handleNewConversation = useCallback(async () => {
@@ -74,50 +64,50 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: '新对话' }),
-      })
+      });
       if (!res.ok)
-        throw new Error('创建对话失败')
-      const data = await res.json()
-      setConversationId(data.conversation.id)
-      setMessages([])
-      setRefreshTrigger(Date.now())
+        throw new Error('创建对话失败');
+      const data = await res.json();
+      setConversationId(data.conversation.id);
+      setMessages([]);
+      setRefreshTrigger(Date.now());
     }
     catch (error) {
-      console.error('Create conversation error:', error)
-      toast.error('创建对话失败')
+      console.error('Create conversation error:', error);
+      toast.error('创建对话失败');
     }
-  }, [setMessages])
+  }, [setMessages]);
 
   // 打开时自动创建对话
   useEffect(() => {
     if (open && !conversationId) {
-      handleNewConversation()
+      handleNewConversation();
     }
-  }, [open, conversationId, handleNewConversation])
+  }, [open, conversationId, handleNewConversation]);
 
   const onSubmit = () => {
     if (!conversationId) {
-      toast.error('请先创建对话')
-      return
+      toast.error('请先创建对话');
+      return;
     }
     if (!input.trim())
-      return
+      return;
 
     sendMessage(
       { text: input },
       {
         body: { conversationId },
       },
-    )
-    setInput('')
-  }
+    );
+    setInput('');
+  };
 
   // 监听消息变化以触发刷新
   useEffect(() => {
     if (messages.length > 0) {
-      setRefreshTrigger(Date.now())
+      setRefreshTrigger(Date.now());
     }
-  }, [messages.length])
+  }, [messages.length]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,7 +123,7 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
             refreshTrigger={refreshTrigger}
           />
           <div className="flex-1 flex flex-col">
-            <ChatMessages messages={localMessages} isLoading={isLoading} />
+            <ChatMessages messages={messages} isLoading={isLoading} />
             <ChatInput
               input={input}
               isLoading={isLoading}
@@ -144,5 +134,5 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

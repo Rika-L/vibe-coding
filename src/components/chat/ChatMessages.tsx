@@ -1,28 +1,23 @@
-'use client'
+'use client';
 
-import { useEffect, useRef } from 'react'
-import ReactMarkdown from 'react-markdown'
-import { cn } from '@/lib/utils'
-import { Bot, User } from 'lucide-react'
-
-export interface Message {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
+import { useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { cn } from '@/lib/utils';
+import { Bot, User } from 'lucide-react';
+import type { UIMessage } from 'ai';
 
 interface ChatMessagesProps {
-  messages: Message[]
-  isLoading: boolean
+  messages: UIMessage[];
+  isLoading: boolean;
 }
 
 export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   // 自动滚动到底部
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   if (messages.length === 0 && !isLoading) {
     return (
@@ -33,7 +28,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
           <p className="text-xs mt-1">有什么关于睡眠的问题都可以问我</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -62,13 +57,20 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
                 : 'bg-muted',
             )}
           >
-            {message.role === 'user' ? (
-              <p className="whitespace-pre-wrap">{message.content}</p>
-            ) : (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown>{message.content}</ReactMarkdown>
-              </div>
-            )}
+            {message.parts.map((part, i) => {
+              if (part.type === 'text') {
+                return message.role === 'user'
+                  ? (
+                      <p key={i} className="whitespace-pre-wrap">{part.text}</p>
+                    )
+                  : (
+                      <div key={i} className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown>{part.text}</ReactMarkdown>
+                      </div>
+                    );
+              }
+              return null;
+            })}
           </div>
         </div>
       ))}
@@ -88,5 +90,5 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
       )}
       <div ref={bottomRef} />
     </div>
-  )
+  );
 }

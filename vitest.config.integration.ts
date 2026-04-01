@@ -15,7 +15,7 @@ export default defineConfig({
     environment: 'node',
     include: ['__test__/integration/**/*.test.ts'],
     exclude: ['node_modules/**'],
-    setupFiles: ['__test__/setup.ts'],
+    setupFiles: ['__test__/setup.integration.ts'],
     testTimeout: 15000,
     hookTimeout: 10000,
     // Run with isolation to avoid conflicts

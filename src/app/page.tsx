@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn, LogOut, LayoutDashboard } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { SleepRecordDialog } from "@/components/sleep-record-dialog";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { SleepRecordDialog } from '@/components/sleep-record-dialog';
 
 interface User {
   id: string;
@@ -28,8 +28,8 @@ export default function Home() {
 
   useEffect(() => {
     // 检查用户登录状态
-    fetch("/api/auth/me")
-      .then((res) => res.json())
+    fetch('/api/auth/me')
+      .then(res => res.json())
       .then((data) => {
         if (data.user) {
           setUser(data.user);
@@ -45,33 +45,34 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
-      toast.success("已登出");
-    } catch {
-      toast.error("登出失败");
+      toast.success('已登出');
+    }
+    catch {
+      toast.error('登出失败');
     }
   };
 
   const handleUpload = async (file: File) => {
-    if (!file.name.endsWith(".csv")) {
-      toast.error("请上传 CSV 文件");
+    if (!file.name.endsWith('.csv')) {
+      toast.error('请上传 CSV 文件');
       return;
     }
 
     if (!user) {
-      toast.error("请先登录");
-      router.push("/login");
+      toast.error('请先登录');
+      router.push('/login');
       return;
     }
 
     setIsUploading(true);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
+      const res = await fetch('/api/upload', {
+        method: 'POST',
         body: formData,
       });
 
@@ -80,19 +81,22 @@ export default function Home() {
       if (data.success) {
         if (data.failedCount > 0) {
           toast.warning(`成功导入 ${data.count} 条记录，${data.failedCount} 条失败`);
-        } else {
+        }
+        else {
           toast.success(`成功导入 ${data.count} 条记录`);
         }
         // 延迟跳转，给用户反应时间
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push('/dashboard');
         }, 1500);
-      } else {
-        toast.error(data.error || "上传失败");
+      }
+      else {
+        toast.error(data.error || '上传失败');
         setIsUploading(false);
       }
-    } catch {
-      toast.error("上传出错，请重试");
+    }
+    catch {
+      toast.error('上传出错，请重试');
       setIsUploading(false);
     }
   };
@@ -100,9 +104,10 @@ export default function Home() {
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    }
+    else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   }, []);
@@ -115,6 +120,7 @@ export default function Home() {
     if (e.dataTransfer.files?.[0]) {
       handleUpload(e.dataTransfer.files[0]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,7 +131,7 @@ export default function Home() {
 
   const handleButtonClick = () => {
     if (!isUploading && inputRef.current) {
-      inputRef.current.value = ""; // 允许重复选择同一文件
+      inputRef.current.value = ''; // 允许重复选择同一文件
       inputRef.current.click();
     }
   };
@@ -141,27 +147,31 @@ export default function Home() {
           </Link>
 
           <div className="flex items-center gap-2">
-            {checkingAuth ? null : user ? (
-              <>
-                <Link href="/dashboard">
-                  <Button size="sm" className="gap-2">
-                    <LayoutDashboard className="h-4 w-4" />
-                    看板
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-                  <LogOut className="h-4 w-4" />
-                  登出
-                </Button>
-              </>
-            ) : (
-              <Link href="/login">
-                <Button size="sm" className="gap-2">
-                  <LogIn className="h-4 w-4" />
-                  登录
-                </Button>
-              </Link>
-            )}
+            {checkingAuth
+              ? null
+              : user
+                ? (
+                    <>
+                      <Link href="/dashboard">
+                        <Button size="sm" className="gap-2">
+                          <LayoutDashboard className="h-4 w-4" />
+                          看板
+                        </Button>
+                      </Link>
+                      <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
+                        <LogOut className="h-4 w-4" />
+                        登出
+                      </Button>
+                    </>
+                  )
+                : (
+                    <Link href="/login">
+                      <Button size="sm" className="gap-2">
+                        <LogIn className="h-4 w-4" />
+                        登录
+                      </Button>
+                    </Link>
+                  )}
             <ThemeToggle />
           </div>
         </div>
@@ -190,8 +200,8 @@ export default function Home() {
           <Card
             className={`mx-auto max-w-xl transition-all duration-300 ${
               dragActive
-                ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                : "border-border/50 bg-card/50 backdrop-blur-sm"
+                ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
+                : 'border-border/50 bg-card/50 backdrop-blur-sm'
             }`}
           >
             <CardContent className="p-8">
@@ -205,20 +215,22 @@ export default function Home() {
                 <div
                   className={`rounded-2xl p-6 transition-all duration-300 ${
                     dragActive
-                      ? "bg-primary/20 scale-110"
-                      : "bg-primary/10"
+                      ? 'bg-primary/20 scale-110'
+                      : 'bg-primary/10'
                   }`}
                 >
-                  {isUploading ? (
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                  ) : (
-                    <Upload className="h-10 w-10 text-primary" />
-                  )}
+                  {isUploading
+                    ? (
+                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                      )
+                    : (
+                        <Upload className="h-10 w-10 text-primary" />
+                      )}
                 </div>
 
                 <div className="text-center">
                   <p className="mb-2 text-xl font-semibold text-foreground">
-                    {isUploading ? "正在上传..." : "拖拽 CSV 文件到这里"}
+                    {isUploading ? '正在上传...' : '拖拽 CSV 文件到这里'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     或点击下方按钮选择文件
@@ -248,12 +260,13 @@ export default function Home() {
 
           {/* Manual Add Entry */}
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            或{" "}
+            或
+            {' '}
             <button
               onClick={() => {
                 if (!user) {
-                  toast.error("请先登录");
-                  router.push("/login");
+                  toast.error('请先登录');
+                  router.push('/login');
                   return;
                 }
                 setAddDialogOpen(true);
@@ -296,7 +309,7 @@ export default function Home() {
       <SleepRecordDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
-        onSuccess={() => router.push("/history")}
+        onSuccess={() => router.push('/history')}
       />
     </div>
   );

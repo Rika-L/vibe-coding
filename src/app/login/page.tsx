@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { loginSchema } from "@/lib/validations/auth";
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { loginSchema } from '@/lib/validations/auth';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const redirect = searchParams.get('redirect') || '/dashboard';
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -39,23 +39,26 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("登录成功");
+        toast.success('登录成功');
         router.push(redirect);
-      } else {
-        toast.error(data.error || "登录失败");
       }
-    } catch {
-      toast.error("登录失败，请稍后重试");
-    } finally {
+      else {
+        toast.error(data.error || '登录失败');
+      }
+    }
+    catch {
+      toast.error('登录失败，请稍后重试');
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -81,8 +84,8 @@ function LoginForm() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.email ? "border-destructive" : "border-border focus:border-primary"}`}
+              onChange={e => setEmail(e.target.value)}
+              className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-destructive' : 'border-border focus:border-primary'}`}
               placeholder="请输入邮箱"
             />
             {errors.email && (
@@ -101,8 +104,8 @@ function LoginForm() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.password ? "border-destructive" : "border-border focus:border-primary"}`}
+              onChange={e => setPassword(e.target.value)}
+              className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-destructive' : 'border-border focus:border-primary'}`}
               placeholder="请输入密码"
             />
             {errors.password && (
@@ -111,19 +114,22 @@ function LoginForm() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                登录中...
-              </>
-            ) : (
-              "登录"
-            )}
+            {loading
+              ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    登录中...
+                  </>
+                )
+              : (
+                  '登录'
+                )}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
-          还没有账号？{" "}
+          还没有账号？
+          {' '}
           <Link
             href="/register"
             className="text-primary hover:underline"

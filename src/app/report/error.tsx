@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function ReportError({
   error,
@@ -12,7 +12,7 @@ export default function ReportError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Report error:", error);
+    console.error('Report error:', error);
   }, [error]);
 
   return (
@@ -22,7 +22,7 @@ export default function ReportError({
           报告加载失败
         </h2>
         <p className="text-muted-foreground">
-          {error.message || "发生了意外错误"}
+          {error.message || '发生了意外错误'}
         </p>
       </div>
       <div className="flex gap-4">

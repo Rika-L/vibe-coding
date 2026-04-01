@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { registerSchema } from "@/lib/validations/auth";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { registerSchema } from '@/lib/validations/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -38,23 +38,26 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success("注册成功");
-        router.push("/dashboard");
-      } else {
-        toast.error(data.error || "注册失败");
+        toast.success('注册成功');
+        router.push('/dashboard');
       }
-    } catch {
-      toast.error("注册失败，请稍后重试");
-    } finally {
+      else {
+        toast.error(data.error || '注册失败');
+      }
+    }
+    catch {
+      toast.error('注册失败，请稍后重试');
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -86,8 +89,8 @@ export default function RegisterPage() {
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.name ? "border-destructive" : "border-border focus:border-primary"}`}
+                  onChange={e => setName(e.target.value)}
+                  className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.name ? 'border-destructive' : 'border-border focus:border-primary'}`}
                   placeholder="请输入姓名"
                 />
                 {errors.name && (
@@ -106,8 +109,8 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.email ? "border-destructive" : "border-border focus:border-primary"}`}
+                  onChange={e => setEmail(e.target.value)}
+                  className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-destructive' : 'border-border focus:border-primary'}`}
                   placeholder="请输入邮箱"
                 />
                 {errors.email && (
@@ -126,8 +129,8 @@ export default function RegisterPage() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.password ? "border-destructive" : "border-border focus:border-primary"}`}
+                  onChange={e => setPassword(e.target.value)}
+                  className={`w-full rounded-lg border bg-background px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-destructive' : 'border-border focus:border-primary'}`}
                   placeholder="至少 6 个字符"
                 />
                 {errors.password && (
@@ -136,19 +139,22 @@ export default function RegisterPage() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    注册中...
-                  </>
-                ) : (
-                  "注册"
-                )}
+                {loading
+                  ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        注册中...
+                      </>
+                    )
+                  : (
+                      '注册'
+                    )}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              已有账号？{" "}
+              已有账号？
+              {' '}
               <Link
                 href="/login"
                 className="text-primary hover:underline"

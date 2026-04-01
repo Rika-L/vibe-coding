@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
@@ -17,18 +17,18 @@ import {
   LogOut,
   Search,
   X,
-} from "lucide-react";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { toast } from 'sonner';
 import {
   SleepTrendChart,
   SleepStructureChart,
   SleepScoreGauge,
-} from "@/components/charts";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { DateRangeDialog } from "@/components/date-range-dialog";
+} from '@/components/charts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { DateRangeDialog } from '@/components/date-range-dialog';
 
 // 前端请求超时时间 (毫秒)
 const FETCH_TIMEOUT = 90000;
@@ -49,38 +49,41 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeProgress, setAnalyzeProgress] = useState("");
+  const [analyzeProgress, setAnalyzeProgress] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [filtering, setFiltering] = useState(false);
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async (filterStart?: string, filterEnd?: string) => {
     try {
       setLoadError(false);
       const params = new URLSearchParams();
-      if (filterStart) params.set("startDate", filterStart);
-      if (filterEnd) params.set("endDate", filterEnd);
+      if (filterStart) params.set('startDate', filterStart);
+      if (filterEnd) params.set('endDate', filterEnd);
 
-      const url = `/api/sleep-data${params.toString() ? `?${params}` : ""}`;
+      const url = `/api/sleep-data${params.toString() ? `?${params}` : ''}`;
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
-          router.push("/login?redirect=/dashboard");
+          router.push('/login?redirect=/dashboard');
           return;
         }
-        throw new Error("网络请求失败");
+        throw new Error('网络请求失败');
       }
       const data = await res.json();
       setRecords(data.records || []);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
+    }
+    catch (error) {
+      console.error('Failed to fetch data:', error);
       setLoadError(true);
-    } finally {
+    }
+    finally {
       setLoading(false);
       setFiltering(false);
     }
@@ -88,11 +91,12 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      toast.success("已登出");
-      router.push("/login");
-    } catch {
-      toast.error("登出失败");
+      await fetch('/api/auth/logout', { method: 'POST' });
+      toast.success('已登出');
+      router.push('/login');
+    }
+    catch {
+      toast.error('登出失败');
     }
   };
 
@@ -103,8 +107,8 @@ export default function Dashboard() {
   };
 
   const clearFilter = () => {
-    setStartDate("");
-    setEndDate("");
+    setStartDate('');
+    setEndDate('');
     setLoading(true);
     fetchData();
   };
@@ -121,10 +125,11 @@ export default function Dashboard() {
       });
       clearTimeout(timeoutId);
       return res;
-    } catch (error) {
+    }
+    catch (error) {
       clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === "AbortError") {
-        throw new Error("请求超时，请重试");
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('请求超时，请重试');
       }
       throw error;
     }
@@ -132,31 +137,33 @@ export default function Dashboard() {
 
   const handleAnalyze = async (startDate?: string, endDate?: string) => {
     setAnalyzing(true);
-    setAnalyzeProgress("正在分析数据...");
+    setAnalyzeProgress('正在分析数据...');
     setDialogOpen(false);
 
     try {
       const res = await fetchWithTimeout(
-        "/api/analyze",
+        '/api/analyze',
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ startDate, endDate }),
         },
-        FETCH_TIMEOUT
+        FETCH_TIMEOUT,
       );
       const data = await res.json();
 
       if (data.report) {
-        setAnalyzeProgress("分析完成！");
-        toast.success("报告生成成功");
+        setAnalyzeProgress('分析完成！');
+        toast.success('报告生成成功');
         router.push(`/report/${data.report.id}`);
-      } else {
-        toast.error(data.error || "分析失败");
+      }
+      else {
+        toast.error(data.error || '分析失败');
         setAnalyzing(false);
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "分析失败，请重试";
+    }
+    catch (error) {
+      const message = error instanceof Error ? error.message : '分析失败，请重试';
       toast.error(message);
       setAnalyzing(false);
     }
@@ -212,36 +219,36 @@ export default function Dashboard() {
     );
   }
 
-  const recordsWithScore = records.filter((r) => r.sleepScore !== null);
+  const recordsWithScore = records.filter(r => r.sleepScore !== null);
   const avgScore = recordsWithScore.length > 0
     ? records.reduce((sum, r) => sum + (r.sleepScore || 0), 0) / recordsWithScore.length
     : 0;
 
-  const chartData = records.map((r) => ({
-    date: new Date(r.date).toLocaleDateString("zh-CN", {
-      month: "short",
-      day: "numeric",
+  const chartData = records.map(r => ({
+    date: new Date(r.date).toLocaleDateString('zh-CN', {
+      month: 'short',
+      day: 'numeric',
     }),
     duration: r.sleepDuration,
     score: r.sleepScore,
   }));
 
-  const structureData = records.map((r) => ({
+  const structureData = records.map(r => ({
     deep: r.deepSleep,
     light: r.lightSleep,
     rem: r.remSleep,
   }));
 
-  const avgDuration =
-    records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length;
+  const avgDuration
+    = records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length;
 
-  const recordsWithDeep = records.filter((r) => r.deepSleep !== null);
+  const recordsWithDeep = records.filter(r => r.deepSleep !== null);
   const avgDeep = recordsWithDeep.length > 0
     ? records.reduce((sum, r) => sum + (r.deepSleep || 0), 0) / recordsWithDeep.length
     : 0;
 
-  const dataCompleteness =
-    (records.filter((r) => r.sleepScore).length / records.length) * 100;
+  const dataCompleteness
+    = (records.filter(r => r.sleepScore).length / records.length) * 100;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
@@ -273,17 +280,19 @@ export default function Dashboard() {
               disabled={analyzing}
               className="gap-2"
             >
-              {analyzing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {analyzeProgress || "分析中..."}
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  生成 AI 报告
-                </>
-              )}
+              {analyzing
+                ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {analyzeProgress || '分析中...'}
+                    </>
+                  )
+                : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      生成 AI 报告
+                    </>
+                  )}
             </Button>
           </div>
         </div>
@@ -304,7 +313,7 @@ export default function Dashboard() {
                   <Input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={e => setStartDate(e.target.value)}
                     className="pl-10"
                   />
                 </div>
@@ -318,23 +327,25 @@ export default function Dashboard() {
                   <Input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={e => setEndDate(e.target.value)}
                     className="pl-10"
                   />
                 </div>
               </div>
               <Button onClick={handleFilter} disabled={filtering} className="gap-2">
-                {filtering ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    筛选中...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    筛选
-                  </>
-                )}
+                {filtering
+                  ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        筛选中...
+                      </>
+                    )
+                  : (
+                      <>
+                        <Search className="h-4 w-4" />
+                        筛选
+                      </>
+                    )}
               </Button>
               <Button variant="outline" onClick={clearFilter} className="gap-2">
                 <X className="h-4 w-4" />
@@ -342,7 +353,11 @@ export default function Dashboard() {
               </Button>
               {records.length > 0 && (
                 <span className="text-sm text-muted-foreground">
-                  显示 {records.length} 条记录
+                  显示
+                  {' '}
+                  {records.length}
+                  {' '}
+                  条记录
                 </span>
               )}
             </div>

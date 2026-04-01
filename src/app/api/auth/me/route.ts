@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -8,8 +8,8 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json(
-        { error: "未登录" },
-        { status: 401 }
+        { error: '未登录' },
+        { status: 401 },
       );
     }
 
@@ -25,17 +25,18 @@ export async function GET() {
 
     if (!dbUser) {
       return NextResponse.json(
-        { error: "用户不存在" },
-        { status: 404 }
+        { error: '用户不存在' },
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ user: dbUser });
-  } catch (error) {
-    console.error("Get user error:", error);
+  }
+  catch (error) {
+    console.error('Get user error:', error);
     return NextResponse.json(
-      { error: "获取用户信息失败" },
-      { status: 500 }
+      { error: '获取用户信息失败' },
+      { status: 500 },
     );
   }
 }

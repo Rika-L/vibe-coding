@@ -1,10 +1,10 @@
-import { SignJWT, jwtVerify } from "jose";
-import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
+import { SignJWT, jwtVerify } from 'jose';
+import bcrypt from 'bcryptjs';
+import { cookies } from 'next/headers';
 
 const secretKey = process.env.JWT_SECRET;
 if (!secretKey) {
-  throw new Error("JWT_SECRET is not defined in environment variables");
+  throw new Error('JWT_SECRET is not defined in environment variables');
 }
 
 const key = new TextEncoder().encode(secretKey);
@@ -17,7 +17,7 @@ export async function hashPassword(password: string): Promise<string> {
 // 验证密码
 export async function verifyPassword(
   password: string,
-  hashedPassword: string
+  hashedPassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(password, hashedPassword);
 }
@@ -25,9 +25,9 @@ export async function verifyPassword(
 // 生成 JWT Token
 export async function signToken(payload: { userId: string; email: string }): Promise<string> {
   return new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime("7d") // 7 天过期
+    .setExpirationTime('7d') // 7 天过期
     .sign(key);
 }
 
@@ -36,7 +36,8 @@ export async function verifyToken(token: string): Promise<{ userId: string; emai
   try {
     const { payload } = await jwtVerify(token, key);
     return payload as { userId: string; email: string };
-  } catch {
+  }
+  catch {
     return null;
   }
 }
@@ -44,19 +45,19 @@ export async function verifyToken(token: string): Promise<{ userId: string; emai
 // 设置认证 Cookie
 export async function setAuthCookie(token: string) {
   const cookieStore = await cookies();
-  cookieStore.set("auth-token", token, {
+  cookieStore.set('auth-token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 天
-    path: "/",
+    path: '/',
   });
 }
 
 // 获取当前用户
 export async function getCurrentUser(): Promise<{ userId: string; email: string } | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth-token")?.value;
+  const token = cookieStore.get('auth-token')?.value;
 
   if (!token) {
     return null;
@@ -68,5 +69,5 @@ export async function getCurrentUser(): Promise<{ userId: string; email: string 
 // 清除认证 Cookie
 export async function clearAuthCookie() {
   const cookieStore = await cookies();
-  cookieStore.delete("auth-token");
+  cookieStore.delete('auth-token');
 }

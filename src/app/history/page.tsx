@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Calendar,
@@ -19,11 +19,11 @@ import {
   Trash2,
   Star,
   Pencil,
-} from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,12 +33,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { SleepRecordDialog } from "@/components/sleep-record-dialog";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/alert-dialog';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { SleepRecordDialog } from '@/components/sleep-record-dialog';
+import { cn } from '@/lib/utils';
 
-type TabType = "records" | "reports";
+type TabType = 'records' | 'reports';
 
 interface SleepRecord {
   id: string;
@@ -72,7 +72,7 @@ interface Pagination {
 
 export default function HistoryPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>("records");
+  const [activeTab, setActiveTab] = useState<TabType>('records');
   const [records, setRecords] = useState<SleepRecord[]>([]);
   const [reports, setReports] = useState<AnalysisReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,8 +84,8 @@ export default function HistoryPage() {
     total: 0,
     totalPages: 0,
   });
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -102,30 +102,32 @@ export default function HistoryPage() {
         pageSize: pagination.pageSize.toString(),
       });
 
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
 
       const res = await fetch(`/api/sleep-history?${params}`);
 
       if (!res.ok) {
         if (res.status === 401) {
-          router.push("/login?redirect=/history");
+          router.push('/login?redirect=/history');
           return;
         }
-        throw new Error("网络请求失败");
+        throw new Error('网络请求失败');
       }
 
       const data = await res.json();
       setRecords(data.records || []);
-      setPagination((prev) => ({
+      setPagination(prev => ({
         ...prev,
         total: data.pagination.total,
         totalPages: data.pagination.totalPages,
       }));
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
+    }
+    catch (error) {
+      console.error('Failed to fetch data:', error);
       setLoadError(true);
-    } finally {
+    }
+    finally {
       setLoading(false);
       setFiltering(false);
     }
@@ -136,67 +138,71 @@ export default function HistoryPage() {
       setLoadError(false);
       const params = new URLSearchParams({
         page: pagination.page.toString(),
-        pageSize: "10",
+        pageSize: '10',
       });
 
       const res = await fetch(`/api/reports?${params}`);
 
       if (!res.ok) {
         if (res.status === 401) {
-          router.push("/login?redirect=/history");
+          router.push('/login?redirect=/history');
           return;
         }
-        throw new Error("网络请求失败");
+        throw new Error('网络请求失败');
       }
 
       const data = await res.json();
       setReports(data.reports || []);
-      setPagination((prev) => ({
+      setPagination(prev => ({
         ...prev,
         total: data.pagination.total,
         totalPages: data.pagination.totalPages,
       }));
-    } catch (error) {
-      console.error("Failed to fetch reports:", error);
+    }
+    catch (error) {
+      console.error('Failed to fetch reports:', error);
       setLoadError(true);
-    } finally {
+    }
+    finally {
       setLoading(false);
     }
   }, [pagination.page, router]);
 
   useEffect(() => {
     setLoading(true);
-    if (activeTab === "records") {
+    if (activeTab === 'records') {
       fetchData();
-    } else {
+    }
+    else {
       fetchReports();
     }
   }, [activeTab, fetchData, fetchReports]);
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      toast.success("已登出");
-      router.push("/login");
-    } catch {
-      toast.error("登出失败");
+      await fetch('/api/auth/logout', { method: 'POST' });
+      toast.success('已登出');
+      router.push('/login');
+    }
+    catch {
+      toast.error('登出失败');
     }
   };
 
   const handlePageChange = (newPage: number) => {
-    setPagination((prev) => ({ ...prev, page: newPage }));
+    setPagination(prev => ({ ...prev, page: newPage }));
   };
 
   const handleFilter = () => {
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPagination(prev => ({ ...prev, page: 1 }));
     setFiltering(true);
     setLoading(true);
   };
 
   const clearFilter = () => {
-    setStartDate("");
-    setEndDate("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setStartDate('');
+    setEndDate('');
+    setPagination(prev => ({ ...prev, page: 1 }));
     setLoading(true);
   };
 
@@ -211,19 +217,21 @@ export default function HistoryPage() {
     setDeletingId(reportToDelete);
     try {
       const res = await fetch(`/api/reports/${reportToDelete}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "删除失败");
+        throw new Error(data.error || '删除失败');
       }
 
-      toast.success("报告已删除");
+      toast.success('报告已删除');
       fetchReports();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除失败");
-    } finally {
+    }
+    catch (error) {
+      toast.error(error instanceof Error ? error.message : '删除失败');
+    }
+    finally {
       setDeletingId(null);
       setReportToDelete(null);
     }
@@ -249,20 +257,22 @@ export default function HistoryPage() {
     setDeletingId(selectedRecord.id);
     try {
       const res = await fetch(`/api/sleep-records/${selectedRecord.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "删除失败");
+        throw new Error(data.error || '删除失败');
       }
 
-      toast.success("记录已删除");
+      toast.success('记录已删除');
       setDeleteRecordDialogOpen(false);
       fetchData();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "删除失败");
-    } finally {
+    }
+    catch (error) {
+      toast.error(error instanceof Error ? error.message : '删除失败');
+    }
+    finally {
       setDeletingId(null);
       setSelectedRecord(null);
     }
@@ -292,7 +302,7 @@ export default function HistoryPage() {
         <div className="flex gap-4">
           <Button
             variant="outline"
-            onClick={() => (activeTab === "records" ? fetchData() : fetchReports())}
+            onClick={() => (activeTab === 'records' ? fetchData() : fetchReports())}
           >
             重新加载
           </Button>
@@ -334,10 +344,10 @@ export default function HistoryPage() {
         {/* Tab Switcher */}
         <div className="mb-6 flex gap-2">
           <Button
-            variant={activeTab === "records" ? "default" : "outline"}
+            variant={activeTab === 'records' ? 'default' : 'outline'}
             onClick={() => {
-              setActiveTab("records");
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setActiveTab('records');
+              setPagination(prev => ({ ...prev, page: 1 }));
             }}
             className="gap-2"
           >
@@ -345,10 +355,10 @@ export default function HistoryPage() {
             睡眠记录
           </Button>
           <Button
-            variant={activeTab === "reports" ? "default" : "outline"}
+            variant={activeTab === 'reports' ? 'default' : 'outline'}
             onClick={() => {
-              setActiveTab("reports");
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setActiveTab('reports');
+              setPagination(prev => ({ ...prev, page: 1 }));
             }}
             className="gap-2"
           >
@@ -357,7 +367,7 @@ export default function HistoryPage() {
           </Button>
         </div>
 
-        {activeTab === "records" ? (
+        {activeTab === 'records' ? (
           <>
             {/* Filter Section */}
             <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
@@ -375,7 +385,7 @@ export default function HistoryPage() {
                       <Input
                         type="date"
                         value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={e => setStartDate(e.target.value)}
                         className="pl-10"
                       />
                     </div>
@@ -389,23 +399,25 @@ export default function HistoryPage() {
                       <Input
                         type="date"
                         value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
+                        onChange={e => setEndDate(e.target.value)}
                         className="pl-10"
                       />
                     </div>
                   </div>
                   <Button onClick={handleFilter} disabled={filtering} className="gap-2">
-                    {filtering ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        筛选中...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="h-4 w-4" />
-                        筛选
-                      </>
-                    )}
+                    {filtering
+                      ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            筛选中...
+                          </>
+                        )
+                      : (
+                          <>
+                            <Search className="h-4 w-4" />
+                            筛选
+                          </>
+                        )}
                   </Button>
                   <Button variant="outline" onClick={clearFilter} className="gap-2">
                     <X className="h-4 w-4" />
@@ -413,7 +425,11 @@ export default function HistoryPage() {
                   </Button>
                   {pagination.total > 0 && (
                     <span className="text-sm text-muted-foreground">
-                      找到 {pagination.total} 条记录
+                      找到
+                      {' '}
+                      {pagination.total}
+                      {' '}
+                      条记录
                     </span>
                   )}
                 </div>
@@ -424,7 +440,10 @@ export default function HistoryPage() {
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">
-                  睡眠记录 ({pagination.total} 条)
+                  睡眠记录 (
+                  {pagination.total}
+                  {' '}
+                  条)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -463,51 +482,54 @@ export default function HistoryPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {records.map((record) => (
+                          {records.map(record => (
                             <tr
                               key={record.id}
                               onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
                               className={cn(
-                                "cursor-pointer border-b border-border/50 transition-all duration-200",
+                                'cursor-pointer border-b border-border/50 transition-all duration-200',
                                 record.id === selectedId
-                                  ? "bg-primary/10 border-l-2 border-l-primary"
-                                  : "hover:bg-muted/50"
+                                  ? 'bg-primary/10 border-l-2 border-l-primary'
+                                  : 'hover:bg-muted/50',
                               )}
                             >
                               <td className="px-4 py-3 text-sm">
-                                {new Date(record.date).toLocaleDateString("zh-CN")}
+                                {new Date(record.date).toLocaleDateString('zh-CN')}
                               </td>
                               <td className="px-4 py-3 text-sm">
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-3 w-3 text-muted-foreground" />
-                                  {record.sleepDuration.toFixed(1)}h
+                                  {record.sleepDuration.toFixed(1)}
+                                  h
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-sm">
-                                {record.deepSleep ? `${record.deepSleep.toFixed(1)}h` : "-"}
+                                {record.deepSleep ? `${record.deepSleep.toFixed(1)}h` : '-'}
                               </td>
                               <td className="px-4 py-3 text-sm">
-                                {record.lightSleep ? `${record.lightSleep.toFixed(1)}h` : "-"}
+                                {record.lightSleep ? `${record.lightSleep.toFixed(1)}h` : '-'}
                               </td>
                               <td className="px-4 py-3 text-sm">
-                                {record.remSleep ? `${record.remSleep.toFixed(1)}h` : "-"}
+                                {record.remSleep ? `${record.remSleep.toFixed(1)}h` : '-'}
                               </td>
                               <td className="px-4 py-3 text-sm">
-                                {record.sleepScore ? (
-                                  <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                      record.sleepScore >= 80
-                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                        : record.sleepScore >= 60
-                                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                    }`}
-                                  >
-                                    {record.sleepScore}
-                                  </span>
-                                ) : (
-                                  "-"
-                                )}
+                                {record.sleepScore
+                                  ? (
+                                      <span
+                                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                          record.sleepScore >= 80
+                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                            : record.sleepScore >= 60
+                                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                        }`}
+                                      >
+                                        {record.sleepScore}
+                                      </span>
+                                    )
+                                  : (
+                                      '-'
+                                    )}
                               </td>
                               <td className="px-4 py-3 text-sm">
                                 <div className="flex items-center gap-1">
@@ -543,7 +565,15 @@ export default function HistoryPage() {
                     {/* Pagination */}
                     <div className="mt-4 flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        第 {pagination.page} / {pagination.totalPages} 页
+                        第
+                        {' '}
+                        {pagination.page}
+                        {' '}
+                        /
+                        {' '}
+                        {pagination.totalPages}
+                        {' '}
+                        页
                       </p>
                       <div className="flex items-center gap-2">
                         <Button
@@ -574,7 +604,10 @@ export default function HistoryPage() {
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-medium">
-                AI 分析报告 ({pagination.total} 份)
+                AI 分析报告 (
+                {pagination.total}
+                {' '}
+                份)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -591,12 +624,12 @@ export default function HistoryPage() {
                   <div className="space-y-4">
                     {reports.map((report) => {
                       const qualityConfig: Record<string, { color: string; bg: string }> = {
-                        优秀: { color: "text-green-500", bg: "bg-green-500/10" },
-                        良好: { color: "text-blue-500", bg: "bg-blue-500/10" },
-                        一般: { color: "text-yellow-500", bg: "bg-yellow-500/10" },
-                        较差: { color: "text-red-500", bg: "bg-red-500/10" },
+                        优秀: { color: 'text-green-500', bg: 'bg-green-500/10' },
+                        良好: { color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                        一般: { color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+                        较差: { color: 'text-red-500', bg: 'bg-red-500/10' },
                       };
-                      const qualityStyle = qualityConfig[report.sleepQuality] || qualityConfig["良好"];
+                      const qualityStyle = qualityConfig[report.sleepQuality] || qualityConfig['良好'];
 
                       return (
                         <div
@@ -608,8 +641,8 @@ export default function HistoryPage() {
                             className="flex-1 min-w-0"
                           >
                             <div className="flex items-start gap-3">
-                              <div className={cn("rounded-lg p-2", qualityStyle.bg)}>
-                                <Star className={cn("h-5 w-5", qualityStyle.color)} />
+                              <div className={cn('rounded-lg p-2', qualityStyle.bg)}>
+                                <Star className={cn('h-5 w-5', qualityStyle.color)} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-medium text-foreground truncate">
@@ -621,9 +654,9 @@ export default function HistoryPage() {
                                 <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    {new Date(report.createdAt).toLocaleDateString("zh-CN")}
+                                    {new Date(report.createdAt).toLocaleDateString('zh-CN')}
                                   </span>
-                                  <span className={cn("rounded-full px-2 py-0.5", qualityStyle.bg, qualityStyle.color)}>
+                                  <span className={cn('rounded-full px-2 py-0.5', qualityStyle.bg, qualityStyle.color)}>
                                     {report.sleepQuality}
                                   </span>
                                   <span>{report.dataRange}</span>
@@ -638,11 +671,13 @@ export default function HistoryPage() {
                             onClick={() => handleDeleteReport(report.id)}
                             disabled={deletingId === report.id}
                           >
-                            {deletingId === report.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
+                            {deletingId === report.id
+                              ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                )
+                              : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
                           </Button>
                         </div>
                       );
@@ -653,7 +688,15 @@ export default function HistoryPage() {
                   {pagination.totalPages > 1 && (
                     <div className="mt-6 flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        第 {pagination.page} / {pagination.totalPages} 页
+                        第
+                        {' '}
+                        {pagination.page}
+                        {' '}
+                        /
+                        {' '}
+                        {pagination.totalPages}
+                        {' '}
+                        页
                       </p>
                       <div className="flex items-center gap-2">
                         <Button
@@ -703,14 +746,16 @@ export default function HistoryPage() {
               disabled={deletingId === reportToDelete}
               className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
             >
-              {deletingId === reportToDelete ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  删除中...
-                </>
-              ) : (
-                "确认删除"
-              )}
+              {deletingId === reportToDelete
+                ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      删除中...
+                    </>
+                  )
+                : (
+                    '确认删除'
+                  )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -745,14 +790,16 @@ export default function HistoryPage() {
               disabled={deletingId === selectedRecord?.id}
               className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
             >
-              {deletingId === selectedRecord?.id ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  删除中...
-                </>
-              ) : (
-                "确认删除"
-              )}
+              {deletingId === selectedRecord?.id
+                ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      删除中...
+                    </>
+                  )
+                : (
+                    '确认删除'
+                  )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run -c vitest.config.integration.ts",
+    "test:all": "npm run test:run && npm run test:integration"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.48",

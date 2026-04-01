@@ -2,6 +2,8 @@
 import { defineConfig } from 'vitest/config'
 import path from 'path'
 
+// Unit test config - run with: npm run test:run
+// Integration tests have their own config (vitest.config.integration.ts)
 export default defineConfig({
   resolve: {
     alias: {
@@ -11,8 +13,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['__test__/**/*.test.ts'],
-    exclude: ['__test__/e2e/**', 'node_modules/**'],
+    include: ['__test__/unit/**/*.test.ts'],
+    exclude: ['__test__/e2e/**', '__test__/integration/**', 'node_modules/**'],
+    setupFiles: ['__test__/setup.ts'],
+    testTimeout: 15000,
+    hookTimeout: 10000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -25,7 +30,5 @@ export default defineConfig({
         statements: 80
       }
     },
-    testTimeout: 15000,
-    hookTimeout: 10000,
   },
 })

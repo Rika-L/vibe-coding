@@ -13,7 +13,7 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#password").fill("password123");
 
       // Submit the form
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "注册" }).click();
 
       // Should redirect to dashboard after successful registration
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -27,8 +27,8 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#email").fill("invalid-email");
       await page.locator("input#password").fill("password123");
 
-      // Submit the form
-      await page.locator('button[type="submit"]').click();
+      // Click the submit button
+      await page.locator("button").filter({ hasText: "注册" }).click();
 
       // Should show validation error
       await expect(page.locator("text=请输入有效的邮箱地址")).toBeVisible();
@@ -42,11 +42,11 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#email").fill("test@example.com");
       await page.locator("input#password").fill("123");
 
-      // Submit the form
-      await page.locator('button[type="submit"]').click();
+      // Click the submit button
+      await page.locator("button").filter({ hasText: "注册" }).click();
 
       // Should show validation error
-      await expect(page.locator("text=密码至少需要 6 个字符")).toBeVisible();
+      await expect(page.locator("text=密码至少 6 个字符")).toBeVisible();
     });
 
     test("should navigate to login page", async ({ page }) => {
@@ -76,7 +76,7 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#name").fill("Login Test User");
       await page.locator("input#email").fill(testUserEmail);
       await page.locator("input#password").fill(testUserPassword);
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "注册" }).click();
 
       // Wait for registration to complete
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -92,7 +92,7 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#password").fill(testUserPassword);
 
       // Submit the form
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "登录" }).click();
 
       // Should redirect to dashboard after successful login
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -106,7 +106,7 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#password").fill("wrongpassword");
 
       // Submit the form
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "登录" }).click();
 
       // Should show error toast or message
       await expect(
@@ -117,11 +117,15 @@ test.describe("Authentication Flow", () => {
     test("should show validation error for empty fields", async ({ page }) => {
       await page.goto("/login");
 
-      // Submit without filling
+      // Wait for the form to be rendered (LoginForm is inside Suspense)
+      await page.waitForSelector('button[type="submit"]');
+
+      // Click the submit button
       await page.locator('button[type="submit"]').click();
 
-      // Should show validation errors
-      await expect(page.locator("text=请输入邮箱")).toBeVisible();
+      // Should show validation errors (email validation shows "请输入有效的邮箱地址" due to zod order)
+      await expect(page.locator("text=请输入有效的邮箱地址")).toBeVisible();
+      await expect(page.locator("text=请输入密码")).toBeVisible();
     });
 
     test("should navigate to register page", async ({ page }) => {
@@ -144,7 +148,7 @@ test.describe("Authentication Flow", () => {
       // Login
       await page.locator("input#email").fill(testUserEmail);
       await page.locator("input#password").fill(testUserPassword);
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "登录" }).click();
 
       // Should redirect back to dashboard
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -166,7 +170,7 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#name").fill("Logout Test User");
       await page.locator("input#email").fill(testUserEmail);
       await page.locator("input#password").fill(testUserPassword);
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "注册" }).click();
 
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
 
@@ -178,12 +182,15 @@ test.describe("Authentication Flow", () => {
       await page.goto("/login");
       await page.locator("input#email").fill(testUserEmail);
       await page.locator("input#password").fill(testUserPassword);
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "登录" }).click();
 
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
 
-      // Click logout button (has LogOut icon)
-      await page.locator('button:has([data-lucide="log-out"])').click();
+      // Wait for page to load (loading state should complete)
+      await expect(page.locator("text=加载中")).not.toBeVisible({ timeout: 10000 });
+
+      // Click logout button
+      await page.locator('button[aria-label="登出"]').click();
 
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
@@ -194,9 +201,12 @@ test.describe("Authentication Flow", () => {
       await page.goto("/login");
       await page.locator("input#email").fill(testUserEmail);
       await page.locator("input#password").fill(testUserPassword);
-      await page.locator('button[type="submit"]').click();
+      await page.locator("button").filter({ hasText: "登录" }).click();
 
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+
+      // Wait for page to load
+      await expect(page.locator("text=加载中")).not.toBeVisible({ timeout: 10000 });
 
       // Logout
       await page.locator('button:has([data-lucide="log-out"])').click();

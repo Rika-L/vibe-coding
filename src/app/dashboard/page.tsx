@@ -169,56 +169,6 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
-        <div className="text-center">
-          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive/50" />
-          <h2 className="mb-2 text-2xl font-semibold text-foreground">
-            加载失败
-          </h2>
-          <p className="text-muted-foreground">网络错误，请稍后重试</p>
-        </div>
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={() => fetchData()}>
-            重新加载
-          </Button>
-          <Link href="/">
-            <Button>返回上传</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (records.length === 0) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
-        <div className="text-center">
-          <Moon className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
-          <h2 className="mb-2 text-2xl font-semibold text-foreground">
-            暂无数据
-          </h2>
-          <p className="text-muted-foreground">请先上传 CSV 文件</p>
-        </div>
-        <Link href="/">
-          <Button>返回上传</Button>
-        </Link>
-      </div>
-    );
-  }
-
   const recordsWithScore = records.filter(r => r.sleepScore !== null);
   const avgScore = recordsWithScore.length > 0
     ? records.reduce((sum, r) => sum + (r.sleepScore || 0), 0) / recordsWithScore.length
@@ -240,7 +190,9 @@ export default function Dashboard() {
   }));
 
   const avgDuration
-    = records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length;
+    = records.length > 0
+      ? records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length
+      : 0;
 
   const recordsWithDeep = records.filter(r => r.deepSleep !== null);
   const avgDeep = recordsWithDeep.length > 0
@@ -248,7 +200,9 @@ export default function Dashboard() {
     : 0;
 
   const dataCompleteness
-    = (records.filter(r => r.sleepScore).length / records.length) * 100;
+    = records.length > 0
+      ? (records.filter(r => r.sleepScore).length / records.length) * 100
+      : 0;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
@@ -272,12 +226,12 @@ export default function Dashboard() {
               </Button>
             </Link>
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <Button variant="outline" size="sm" onClick={handleLogout} aria-label="登出">
               <LogOut className="h-4 w-4" />
             </Button>
             <Button
               onClick={() => setDialogOpen(true)}
-              disabled={analyzing}
+              disabled={analyzing || loading || loadError || records.length === 0}
               className="gap-2"
             >
               {analyzing
@@ -298,133 +252,182 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex min-h-[calc(100vh-73px)] items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-muted-foreground">加载中...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {loadError && (
+        <div className="flex min-h-[calc(100vh-73px)] flex-col items-center justify-center gap-6 bg-background">
+          <div className="text-center">
+            <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive/50" />
+            <h2 className="mb-2 text-2xl font-semibold text-foreground">
+              加载失败
+            </h2>
+            <p className="text-muted-foreground">网络错误，请稍后重试</p>
+          </div>
+          <div className="flex gap-4">
+            <Button variant="outline" onClick={() => fetchData()}>
+              重新加载
+            </Button>
+            <Link href="/">
+              <Button>返回上传</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !loadError && records.length === 0 && (
+        <div className="flex min-h-[calc(100vh-73px)] flex-col items-center justify-center gap-6 bg-background">
+          <div className="text-center">
+            <Moon className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
+            <h2 className="mb-2 text-2xl font-semibold text-foreground">
+              暂无数据
+            </h2>
+            <p className="text-muted-foreground">请先上传 CSV 文件</p>
+          </div>
+          <Link href="/">
+            <Button>返回上传</Button>
+          </Link>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Filter Section */}
-        <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="py-4">
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex-1 min-w-[150px]">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                  开始日期
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    className="pl-10"
-                  />
+      {!loading && !loadError && records.length > 0 && (
+        <main className="container mx-auto px-4 py-8">
+          {/* Filter Section */}
+          <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="flex-1 min-w-[150px]">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                    开始日期
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 min-w-[150px]">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                  结束日期
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="flex-1 min-w-[150px]">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                    结束日期
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
+                <Button onClick={handleFilter} disabled={filtering} className="gap-2">
+                  {filtering
+                    ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          筛选中...
+                        </>
+                      )
+                    : (
+                        <>
+                          <Search className="h-4 w-4" />
+                          筛选
+                        </>
+                      )}
+                </Button>
+                <Button variant="outline" onClick={clearFilter} className="gap-2">
+                  <X className="h-4 w-4" />
+                  清除
+                </Button>
+                {records.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    显示
+                    {' '}
+                    {records.length}
+                    {' '}
+                    条记录
+                  </span>
+                )}
               </div>
-              <Button onClick={handleFilter} disabled={filtering} className="gap-2">
-                {filtering
-                  ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        筛选中...
-                      </>
-                    )
-                  : (
-                      <>
-                        <Search className="h-4 w-4" />
-                        筛选
-                      </>
-                    )}
-              </Button>
-              <Button variant="outline" onClick={clearFilter} className="gap-2">
-                <X className="h-4 w-4" />
-                清除
-              </Button>
-              {records.length > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  显示
-                  {' '}
-                  {records.length}
-                  {' '}
-                  条记录
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid */}
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <StatCard
-            icon={Clock}
-            title="平均睡眠时长"
-            value={`${avgDuration.toFixed(1)}h`}
-            subtitle="每日平均"
-          />
-          <StatCard
-            icon={Calendar}
-            title="记录天数"
-            value={`${records.length}天`}
-            subtitle="累计记录"
-          />
-          <StatCard
-            icon={TrendingUp}
-            title="平均深睡"
-            value={`${avgDeep.toFixed(1)}h`}
-            subtitle="深度睡眠"
-          />
-          <StatCard
-            icon={Database}
-            title="数据完整度"
-            value={`${Math.round(dataCompleteness)}%`}
-            subtitle="有效数据"
-          />
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Sleep Score Gauge */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">睡眠评分</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SleepScoreGauge score={Math.round(avgScore)} />
             </CardContent>
           </Card>
 
-          {/* Sleep Trend Chart */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm lg:col-span-2">
+          {/* Stats Grid */}
+          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <StatCard
+              icon={Clock}
+              title="平均睡眠时长"
+              value={`${avgDuration.toFixed(1)}h`}
+              subtitle="每日平均"
+            />
+            <StatCard
+              icon={Calendar}
+              title="记录天数"
+              value={`${records.length}天`}
+              subtitle="累计记录"
+            />
+            <StatCard
+              icon={TrendingUp}
+              title="平均深睡"
+              value={`${avgDeep.toFixed(1)}h`}
+              subtitle="深度睡眠"
+            />
+            <StatCard
+              icon={Database}
+              title="数据完整度"
+              value={`${Math.round(dataCompleteness)}%`}
+              subtitle="有效数据"
+            />
+          </div>
+
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* Sleep Score Gauge */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">睡眠评分</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SleepScoreGauge score={Math.round(avgScore)} />
+              </CardContent>
+            </Card>
+
+            {/* Sleep Trend Chart */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">睡眠趋势</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SleepTrendChart data={chartData} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sleep Structure Chart */}
+          <Card className="mt-6 border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">睡眠趋势</CardTitle>
+              <CardTitle className="text-lg font-medium">平均睡眠结构</CardTitle>
             </CardHeader>
             <CardContent>
-              <SleepTrendChart data={chartData} />
+              <SleepStructureChart data={structureData} />
             </CardContent>
           </Card>
-        </div>
-
-        {/* Sleep Structure Chart */}
-        <Card className="mt-6 border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">平均睡眠结构</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SleepStructureChart data={structureData} />
-          </CardContent>
-        </Card>
-      </main>
+        </main>
+      )}
 
       {/* Date Range Dialog */}
       <DateRangeDialog

@@ -20,6 +20,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | [components.md](agents/components.md) | 组件开发规范 |
 | [styling.md](agents/styling.md) | 样式规范 |
 | [code-standards.md](agents/code-standards.md) | 代码规范 |
+| [testing.md](agents/testing.md) | 测试规范 |
 
 ## 已实现功能
 

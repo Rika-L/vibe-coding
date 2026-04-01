@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { generateSleepAnalysis } from "@/lib/ai";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { generateSleepAnalysis } from '@/lib/ai';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 interface SleepRecord {
   date: Date;
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "未登录" },
-        { status: 401 }
+        { error: '未登录' },
+        { status: 401 },
       );
     }
 
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
         // 设置为当天结束时间
         endDate.setHours(23, 59, 59, 999);
       }
-    } catch {
+    }
+    catch {
       // 如果没有请求体，使用默认逻辑
     }
 
@@ -55,18 +56,18 @@ export async function POST(request: Request) {
 
     const records = await prisma.sleepRecord.findMany({
       where: whereClause,
-      orderBy: { date: "asc" },
+      orderBy: { date: 'asc' },
     });
 
     if (records.length === 0) {
       return NextResponse.json(
-        { error: "所选区间内没有睡眠数据" },
-        { status: 400 }
+        { error: '所选区间内没有睡眠数据' },
+        { status: 400 },
       );
     }
 
     const dataSummary = records.map((r: SleepRecord) => ({
-      date: r.date.toISOString().split("T")[0],
+      date: r.date.toISOString().split('T')[0],
       duration: r.sleepDuration,
       deep: r.deepSleep,
       light: r.lightSleep,
@@ -75,8 +76,8 @@ export async function POST(request: Request) {
       heartRate: r.heartRate,
     }));
 
-    const avgDuration =
-      records.reduce((sum: number, r: SleepRecord) => sum + r.sleepDuration, 0) / records.length;
+    const avgDuration
+      = records.reduce((sum: number, r: SleepRecord) => sum + r.sleepDuration, 0) / records.length;
 
     const recordsWithScore = records.filter((r: SleepRecord) => r.sleepScore !== null);
     const avgScore = recordsWithScore.length > 0
@@ -109,39 +110,41 @@ ${JSON.stringify(dataSummary, null, 2)}
       suggestions?: string | string[];
     }
 
-    const validQualities = ["优秀", "良好", "一般", "较差"];
+    const validQualities = ['优秀', '良好', '一般', '较差'];
     const defaultAnalysis: AIAnalysis = {
-      summary: "暂无分析结果",
-      sleepQuality: "良好",
-      suggestions: "建议保持规律作息",
+      summary: '暂无分析结果',
+      sleepQuality: '良好',
+      suggestions: '建议保持规律作息',
     };
 
     let analysis: AIAnalysis;
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.warn("AI 响应未找到 JSON 格式，使用原始文本");
+        console.warn('AI 响应未找到 JSON 格式，使用原始文本');
         analysis = {
           ...defaultAnalysis,
           summary: text.slice(0, 200),
         };
-      } else {
+      }
+      else {
         const parsed = JSON.parse(jsonMatch[0]);
 
         analysis = {
-          summary: typeof parsed.summary === "string" ? parsed.summary : defaultAnalysis.summary,
+          summary: typeof parsed.summary === 'string' ? parsed.summary : defaultAnalysis.summary,
           sleepQuality: validQualities.includes(parsed.sleepQuality)
             ? parsed.sleepQuality
             : defaultAnalysis.sleepQuality,
           suggestions: parsed.suggestions || defaultAnalysis.suggestions,
         };
 
-        if (!parsed.summary) console.warn("AI 响应缺少 summary 字段");
-        if (!parsed.sleepQuality) console.warn("AI 响应缺少 sleepQuality 字段");
-        if (!parsed.suggestions) console.warn("AI 响应缺少 suggestions 字段");
+        if (!parsed.summary) console.warn('AI 响应缺少 summary 字段');
+        if (!parsed.sleepQuality) console.warn('AI 响应缺少 sleepQuality 字段');
+        if (!parsed.suggestions) console.warn('AI 响应缺少 suggestions 字段');
       }
-    } catch (parseError) {
-      console.warn("AI 响应 JSON 解析失败:", parseError);
+    }
+    catch (parseError) {
+      console.warn('AI 响应 JSON 解析失败:', parseError);
       analysis = {
         ...defaultAnalysis,
         summary: text.slice(0, 200),
@@ -152,22 +155,23 @@ ${JSON.stringify(dataSummary, null, 2)}
     const report = await prisma.analysisReport.create({
       data: {
         title: `睡眠分析报告 - ${new Date().toLocaleDateString()}`,
-        summary: analysis.summary || "",
+        summary: analysis.summary || '',
         suggestions: Array.isArray(analysis.suggestions)
-          ? analysis.suggestions.join("\n")
-          : analysis.suggestions || "",
-        sleepQuality: analysis.sleepQuality || "良好",
+          ? analysis.suggestions.join('\n')
+          : analysis.suggestions || '',
+        sleepQuality: analysis.sleepQuality || '良好',
         dataRange: `${records[0].date.toLocaleDateString()} 至 ${records[records.length - 1].date.toLocaleDateString()}`,
         userId: user.userId,
       },
     });
 
     return NextResponse.json({ report, analysis });
-  } catch (error) {
-    console.error("Analysis error:", error);
+  }
+  catch (error) {
+    console.error('Analysis error:', error);
     return NextResponse.json(
-      { error: "Failed to analyze data" },
-      { status: 500 }
+      { error: 'Failed to analyze data' },
+      { status: 500 },
     );
   }
 }

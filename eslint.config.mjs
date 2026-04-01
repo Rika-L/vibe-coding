@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     semi: true,
     jsx: true,
   }),
+  {
+    rules: {
+      // 禁用 multiline-ternary，JSX 条件渲染中不适用
+      '@stylistic/multiline-ternary': 'off',
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

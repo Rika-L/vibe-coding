@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
@@ -8,14 +8,14 @@ export async function GET(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "未登录" },
-        { status: 401 }
+        { error: '未登录' },
+        { status: 401 },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     const whereClause: { userId: string; date?: { gte?: Date; lte?: Date } } = {
       userId: user.userId,
@@ -33,15 +33,16 @@ export async function GET(request: Request) {
 
     const records = await prisma.sleepRecord.findMany({
       where: whereClause,
-      orderBy: { date: "asc" },
+      orderBy: { date: 'asc' },
     });
 
     return NextResponse.json({ records });
-  } catch (error) {
-    console.error("Fetch error:", error);
+  }
+  catch (error) {
+    console.error('Fetch error:', error);
     return NextResponse.json(
-      { error: "Failed to fetch data" },
-      { status: 500 }
+      { error: 'Failed to fetch data' },
+      { status: 500 },
     );
   }
 }

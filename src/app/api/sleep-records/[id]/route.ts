@@ -1,16 +1,16 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
     const { id } = await params;
@@ -20,25 +20,26 @@ export async function GET(
     });
 
     if (!record) {
-      return NextResponse.json({ error: "记录不存在" }, { status: 404 });
+      return NextResponse.json({ error: '记录不存在' }, { status: 404 });
     }
 
     return NextResponse.json({ record });
-  } catch (error) {
-    console.error("Get sleep record error:", error);
-    return NextResponse.json({ error: "获取记录失败" }, { status: 500 });
+  }
+  catch (error) {
+    console.error('Get sleep record error:', error);
+    return NextResponse.json({ error: '获取记录失败' }, { status: 500 });
   }
 }
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
     const { id } = await params;
@@ -50,7 +51,7 @@ export async function PUT(
     });
 
     if (!existingRecord) {
-      return NextResponse.json({ error: "记录不存在" }, { status: 404 });
+      return NextResponse.json({ error: '记录不存在' }, { status: 404 });
     }
 
     const {
@@ -69,22 +70,22 @@ export async function PUT(
     // 验证数据范围
     if (sleepDuration !== undefined && sleepDuration <= 0) {
       return NextResponse.json(
-        { error: "睡眠时长必须大于0" },
-        { status: 400 }
+        { error: '睡眠时长必须大于0' },
+        { status: 400 },
       );
     }
 
     if (sleepScore !== undefined && sleepScore !== null && (sleepScore < 0 || sleepScore > 100)) {
       return NextResponse.json(
-        { error: "睡眠评分范围为0-100" },
-        { status: 400 }
+        { error: '睡眠评分范围为0-100' },
+        { status: 400 },
       );
     }
 
     if (heartRate !== undefined && heartRate !== null && (heartRate < 30 || heartRate > 200)) {
       return NextResponse.json(
-        { error: "心率范围为30-200" },
-        { status: 400 }
+        { error: '心率范围为30-200' },
+        { status: 400 },
       );
     }
 
@@ -107,21 +108,22 @@ export async function PUT(
     });
 
     return NextResponse.json({ record });
-  } catch (error) {
-    console.error("Update sleep record error:", error);
-    return NextResponse.json({ error: "更新记录失败" }, { status: 500 });
+  }
+  catch (error) {
+    console.error('Update sleep record error:', error);
+    return NextResponse.json({ error: '更新记录失败' }, { status: 500 });
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
     const { id } = await params;
@@ -132,7 +134,7 @@ export async function DELETE(
     });
 
     if (!existingRecord) {
-      return NextResponse.json({ error: "记录不存在" }, { status: 404 });
+      return NextResponse.json({ error: '记录不存在' }, { status: 404 });
     }
 
     await prisma.sleepRecord.delete({
@@ -140,8 +142,9 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Delete sleep record error:", error);
-    return NextResponse.json({ error: "删除记录失败" }, { status: 500 });
+  }
+  catch (error) {
+    console.error('Delete sleep record error:', error);
+    return NextResponse.json({ error: '删除记录失败' }, { status: 500 });
   }
 }

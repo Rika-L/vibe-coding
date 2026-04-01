@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function Error({
   error,
@@ -11,7 +11,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Application error:", error);
+    console.error('Application error:', error);
   }, [error]);
 
   return (
@@ -21,7 +21,7 @@ export default function Error({
           出错了
         </h2>
         <p className="text-muted-foreground">
-          {error.message || "发生了意外错误"}
+          {error.message || '发生了意外错误'}
         </p>
       </div>
       <Button onClick={reset}>重试</Button>

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { use, useEffect, useState } from "react";
-import Link from "next/link";
+import { use, useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   ArrowLeft,
   Calendar,
@@ -10,11 +10,11 @@ import {
   Moon,
   Star,
   AlertCircle,
-} from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface Report {
   id: string;
@@ -26,7 +26,7 @@ interface Report {
   createdAt: string;
 }
 
-type PageState = "loading" | "error" | "not_found" | "success";
+type PageState = 'loading' | 'error' | 'not_found' | 'success';
 
 export default function ReportPage({
   params,
@@ -35,7 +35,7 @@ export default function ReportPage({
 }) {
   const { id } = use(params);
   const [report, setReport] = useState<Report | null>(null);
-  const [pageState, setPageState] = useState<PageState>("loading");
+  const [pageState, setPageState] = useState<PageState>('loading');
 
   useEffect(() => {
     fetchReport();
@@ -47,27 +47,30 @@ export default function ReportPage({
       const res = await fetch(`/api/reports/${id}`);
       if (!res.ok) {
         if (res.status === 404) {
-          setPageState("not_found");
-        } else {
-          throw new Error("网络请求失败");
+          setPageState('not_found');
+        }
+        else {
+          throw new Error('网络请求失败');
         }
         return;
       }
       const data = await res.json();
       if (data.report) {
         setReport(data.report);
-        setPageState("success");
-      } else {
-        setPageState("not_found");
+        setPageState('success');
       }
-    } catch (error) {
-      console.error("Failed to fetch report:", error);
-      setPageState("error");
-      toast.error("加载报告失败");
+      else {
+        setPageState('not_found');
+      }
+    }
+    catch (error) {
+      console.error('Failed to fetch report:', error);
+      setPageState('error');
+      toast.error('加载报告失败');
     }
   };
 
-  if (pageState === "loading") {
+  if (pageState === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -78,7 +81,7 @@ export default function ReportPage({
     );
   }
 
-  if (pageState === "error") {
+  if (pageState === 'error') {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
         <div className="text-center">
@@ -100,7 +103,7 @@ export default function ReportPage({
     );
   }
 
-  if (pageState === "not_found" || !report) {
+  if (pageState === 'not_found' || !report) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
         <div className="text-center">
@@ -119,30 +122,30 @@ export default function ReportPage({
 
   const qualityConfig = {
     优秀: {
-      color: "text-green-500",
-      bg: "bg-green-500/10",
-      border: "border-green-500/20",
+      color: 'text-green-500',
+      bg: 'bg-green-500/10',
+      border: 'border-green-500/20',
     },
     良好: {
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-      border: "border-blue-500/20",
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20',
     },
     一般: {
-      color: "text-yellow-500",
-      bg: "bg-yellow-500/10",
-      border: "border-yellow-500/20",
+      color: 'text-yellow-500',
+      bg: 'bg-yellow-500/10',
+      border: 'border-yellow-500/20',
     },
     较差: {
-      color: "text-red-500",
-      bg: "bg-red-500/10",
-      border: "border-red-500/20",
+      color: 'text-red-500',
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/20',
     },
   };
 
-  const qualityStyle =
-    qualityConfig[report.sleepQuality as keyof typeof qualityConfig] ||
-    qualityConfig["良好"];
+  const qualityStyle
+    = qualityConfig[report.sleepQuality as keyof typeof qualityConfig]
+      || qualityConfig['良好'];
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
@@ -156,7 +159,9 @@ export default function ReportPage({
 
           <ThemeToggle />
 
-          <div className="w-25" /> {/* Spacer for centering */}
+          <div className="w-25" />
+          {' '}
+          {/* Spacer for centering */}
         </div>
       </header>
 
@@ -174,14 +179,15 @@ export default function ReportPage({
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {new Date(report.createdAt).toLocaleDateString("zh-CN", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
+              {new Date(report.createdAt).toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               })}
             </span>
             <span className="rounded-full bg-muted px-3 py-1">
-              数据范围：{report.dataRange}
+              数据范围：
+              {report.dataRange}
             </span>
           </div>
         </div>

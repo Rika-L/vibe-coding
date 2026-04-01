@@ -1,15 +1,16 @@
-import { NextResponse } from "next/server";
-import { clearAuthCookie } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { clearAuthCookie } from '@/lib/auth';
 
 export async function POST() {
   try {
     await clearAuthCookie();
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Logout error:", error);
+  }
+  catch (error) {
+    console.error('Logout error:', error);
     return NextResponse.json(
-      { error: "登出失败" },
-      { status: 500 }
+      { error: '登出失败' },
+      { status: 500 },
     );
   }
 }

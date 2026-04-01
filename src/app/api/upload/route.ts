@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { parseCSV } from "@/lib/csv-parser";
-import { prisma } from "@/lib/prisma";
-import { SleepRecord } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth";
+import { NextRequest, NextResponse } from 'next/server';
+import { parseCSV } from '@/lib/csv-parser';
+import { prisma } from '@/lib/prisma';
+import { SleepRecord } from '@prisma/client';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,27 +10,27 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "未登录" },
-        { status: 401 }
+        { error: '未登录' },
+        { status: 401 },
       );
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    if (!file.name.endsWith(".csv")) {
-      return NextResponse.json({ error: "Only CSV files are allowed" }, { status: 400 });
+    if (!file.name.endsWith('.csv')) {
+      return NextResponse.json({ error: 'Only CSV files are allowed' }, { status: 400 });
     }
 
     const csvText = await file.text();
     const parsedData = await parseCSV(csvText);
 
     if (parsedData.length === 0) {
-      return NextResponse.json({ error: "No valid data found in CSV" }, { status: 400 });
+      return NextResponse.json({ error: 'No valid data found in CSV' }, { status: 400 });
     }
 
     // Save to database
@@ -52,11 +52,12 @@ export async function POST(request: NextRequest) {
               userId: user.userId,
             },
           });
-        } catch (e) {
-          console.error("Failed to parse record:", item, e);
+        }
+        catch (e) {
+          console.error('Failed to parse record:', item, e);
           return null;
         }
-      })
+      }),
     );
 
     const validRecords = records.filter((r): r is SleepRecord => r !== null);
@@ -68,11 +69,12 @@ export async function POST(request: NextRequest) {
       failedCount,
       records: validRecords,
     });
-  } catch (error) {
-    console.error("Upload error:", error);
+  }
+  catch (error) {
+    console.error('Upload error:', error);
     return NextResponse.json(
-      { error: "Failed to process file" },
-      { status: 500 }
+      { error: 'Failed to process file' },
+      { status: 500 },
     );
   }
 }

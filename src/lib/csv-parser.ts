@@ -1,4 +1,4 @@
-import Papa from "papaparse";
+import Papa from 'papaparse';
 
 export interface ParsedSleepData {
   date: string;
@@ -20,7 +20,7 @@ export function parseCSV(csvText: string): Promise<ParsedSleepData[]> {
       skipEmptyLines: true,
       complete: (results) => {
         const data = results.data as Record<string, string>[];
-        const parsed = data.map((row) => parseRow(row));
+        const parsed = data.map(row => parseRow(row));
         resolve(parsed);
       },
       error: (error: Error) => reject(error),
@@ -44,15 +44,15 @@ function parseRow(row: Record<string, string>): ParsedSleepData {
   };
 
   return {
-    date: getValue("date", "Date", "日期") ?? "",
-    bedTime: getValue("bedTime", "bed_time", "bed time", "入睡时间") ?? "",
-    wakeTime: getValue("wakeTime", "wake_time", "wake time", "醒来时间") ?? "",
-    sleepDuration: parseNumber(getValue("sleepDuration", "sleep_duration", "sleep duration", "睡眠时长", "总睡眠")),
-    deepSleep: parseNumber(getValue("deepSleep", "deep_sleep", "deep", "深睡")),
-    lightSleep: parseNumber(getValue("lightSleep", "light_sleep", "light", "浅睡")),
-    remSleep: parseNumber(getValue("remSleep", "rem_sleep", "rem", "REM", "快速眼动")),
-    awakeCount: parseNumber(getValue("awakeCount", "awake_count", "awake", "清醒次数")),
-    sleepScore: parseNumber(getValue("sleepScore", "sleep_score", "score", "睡眠评分", "得分")),
-    heartRate: parseNumber(getValue("heartRate", "heart_rate", "heart", "心率")),
+    date: getValue('date', 'Date', '日期') ?? '',
+    bedTime: getValue('bedTime', 'bed_time', 'bed time', '入睡时间') ?? '',
+    wakeTime: getValue('wakeTime', 'wake_time', 'wake time', '醒来时间') ?? '',
+    sleepDuration: parseNumber(getValue('sleepDuration', 'sleep_duration', 'sleep duration', '睡眠时长', '总睡眠')),
+    deepSleep: parseNumber(getValue('deepSleep', 'deep_sleep', 'deep', '深睡')),
+    lightSleep: parseNumber(getValue('lightSleep', 'light_sleep', 'light', '浅睡')),
+    remSleep: parseNumber(getValue('remSleep', 'rem_sleep', 'rem', 'REM', '快速眼动')),
+    awakeCount: parseNumber(getValue('awakeCount', 'awake_count', 'awake', '清醒次数')),
+    sleepScore: parseNumber(getValue('sleepScore', 'sleep_score', 'score', '睡眠评分', '得分')),
+    heartRate: parseNumber(getValue('heartRate', 'heart_rate', 'heart', '心率')),
   };
 }

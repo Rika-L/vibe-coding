@@ -25,6 +25,18 @@ interface Nebula {
   phase: number;
 }
 
+// 流星配置
+interface Meteor {
+  x: number;
+  y: number;
+  length: number;
+  speed: number;
+  opacity: number;
+  angle: number;
+  active: boolean;
+  tail: { x: number; y: number; opacity: number }[];
+}
+
 // 主题颜色配置
 const COLORS = {
   light: {
@@ -56,6 +68,8 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
   const animationRef = useRef<number | null>(null);
   const starsRef = useRef<Star[]>([]);
   const nebulasRef = useRef<Nebula[]>([]);
+  const meteorRef = useRef<Meteor | null>(null);
+  const nextMeteorTimeRef = useRef(0);
 
   // 生成星云
   const generateNebulas = useCallback((width: number, height: number): Nebula[] => {
@@ -76,6 +90,68 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     }
 
     return nebulas;
+  }, []);
+
+  // 生成流星
+  const generateMeteor = useCallback((width: number, height: number): Meteor => {
+    const startX = Math.random() * width * 0.5 + width * 0.3;
+    const startY = -20;
+
+    return {
+      x: startX,
+      y: startY,
+      length: Math.random() * 80 + 60,
+      speed: Math.random() * 8 + 6,
+      opacity: Math.random() * 0.5 + 0.4,
+      angle: Math.PI / 4 + (Math.random() - 0.5) * 0.2, // 约 45 度角
+      active: true,
+      tail: [],
+    };
+  }, []);
+
+  // 绘制流星
+  const drawMeteor = useCallback((
+    ctx: CanvasRenderingContext2D,
+    meteor: Meteor | null,
+    width: number,
+    height: number,
+    isDark: boolean
+  ) => {
+    if (!meteor || !meteor.active) return;
+
+    const tailLength = meteor.length;
+    const tailX = meteor.x - Math.cos(meteor.angle) * tailLength;
+    const tailY = meteor.y - Math.sin(meteor.angle) * tailLength;
+
+    // 创建渐变拖尾
+    const gradient = ctx.createLinearGradient(tailX, tailY, meteor.x, meteor.y);
+    const baseColor = isDark ? '200, 180, 255' : '180, 150, 255';
+    gradient.addColorStop(0, 'transparent');
+    gradient.addColorStop(0.5, `rgba(${baseColor}, ${meteor.opacity * 0.3})`);
+    gradient.addColorStop(1, `rgba(255, 255, 255, ${meteor.opacity})`);
+
+    ctx.beginPath();
+    ctx.moveTo(tailX, tailY);
+    ctx.lineTo(meteor.x, meteor.y);
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // 流星头部光点
+    ctx.beginPath();
+    ctx.arc(meteor.x, meteor.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${meteor.opacity})`;
+    ctx.fill();
+
+    // 更新位置
+    meteor.x += Math.cos(meteor.angle) * meteor.speed;
+    meteor.y += Math.sin(meteor.angle) * meteor.speed;
+
+    // 检查是否超出边界
+    if (meteor.x > width + 50 || meteor.y > height + 50) {
+      meteor.active = false;
+    }
   }, []);
 
   // 生成星星
@@ -270,8 +346,17 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     // 绘制星星
     drawStars(ctx, starsRef.current, time, isDark);
 
+    // 流星逻辑
+    const now = Date.now();
+    if (!meteorRef.current?.active && now > nextMeteorTimeRef.current) {
+      meteorRef.current = generateMeteor(canvas.width, canvas.height);
+      // 3-8 秒后出现下一颗流星
+      nextMeteorTimeRef.current = now + (Math.random() * 5000 + 3000);
+    }
+    drawMeteor(ctx, meteorRef.current, canvas.width, canvas.height, isDark);
+
     animationRef.current = requestAnimationFrame(animate);
-  }, [drawStars, drawNebulas, drawMoonGlow]);
+  }, [drawStars, drawNebulas, drawMoonGlow, generateMeteor, drawMeteor]);
 
   // 初始化
   useEffect(() => {

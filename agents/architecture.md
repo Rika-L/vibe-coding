@@ -44,7 +44,7 @@ src/
 │   ├── utils.ts            # 通用工具
 │   └── validations/        # Zod 验证 schemas
 │       └── auth.ts         # 认证 & 睡眠记录验证
-├── middleware.ts           # 路由守卫
+├── proxy.ts               # 路由守卫
 └── types/                  # TypeScript 类型
 
 prisma/

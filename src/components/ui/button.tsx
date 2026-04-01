@@ -47,7 +47,7 @@ function Button({
   size = 'default',
   type = 'button',
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & { type?: 'button' | 'submit' | 'reset' }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>) {
   return (
     <button
       data-slot="button"

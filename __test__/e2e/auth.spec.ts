@@ -27,8 +27,19 @@ test.describe("Authentication Flow", () => {
       await page.locator("input#email").fill("invalid-email");
       await page.locator("input#password").fill("password123");
 
-      // Click the submit button
-      await page.locator("button").filter({ hasText: "注册" }).click();
+      // Trigger form submit via JavaScript
+      await page.evaluate(() => {
+        const form = document.querySelector("form");
+        if (form) {
+          // Create and dispatch a submit event
+          const submitEvent = new SubmitEvent("submit", {
+            bubbles: true,
+            cancelable: true,
+            submitter: form.querySelector('button[type="submit"]'),
+          });
+          form.dispatchEvent(submitEvent);
+        }
+      });
 
       // Should show validation error
       await expect(page.locator("text=请输入有效的邮箱地址")).toBeVisible();

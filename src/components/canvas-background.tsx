@@ -31,11 +31,13 @@ const COLORS = {
     star: 'rgba(128, 90, 213, 0.8)', // primary 紫色
     starFar: 'rgba(128, 90, 213, 0.4)',
     nebula: 'rgba(128, 90, 213, 0.08)',
+    moonGlow: 'rgba(255, 220, 150, 0.15)',
   },
   dark: {
     star: 'rgba(180, 150, 255, 0.9)',
     starFar: 'rgba(180, 150, 255, 0.5)',
     nebula: 'rgba(128, 90, 213, 0.12)',
+    moonGlow: 'rgba(255, 220, 150, 0.2)',
   },
 };
 
@@ -188,6 +190,47 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     });
   }, []);
 
+  // 绘制抽象月亮光晕
+  const drawMoonGlow = useCallback((
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    time: number,
+    isDark: boolean
+  ) => {
+    // 月亮位置：右上象限
+    const moonX = width * 0.8;
+    const moonY = height * 0.2;
+
+    // 呼吸效果
+    const breathe = Math.sin(time * 0.3) * 0.03;
+    const baseOpacity = isDark ? 0.2 : 0.12;
+    const currentOpacity = baseOpacity + breathe;
+
+    // 多层光晕
+    const layers = [
+      { radius: 250, opacity: currentOpacity * 0.3 },
+      { radius: 180, opacity: currentOpacity * 0.5 },
+      { radius: 100, opacity: currentOpacity * 0.7 },
+    ];
+
+    const color = isDark ? COLORS.dark.moonGlow : COLORS.light.moonGlow;
+
+    layers.forEach((layer) => {
+      const gradient = ctx.createRadialGradient(
+        moonX, moonY, 0,
+        moonX, moonY, layer.radius
+      );
+      gradient.addColorStop(0, color.replace(/[\d.]+\)$/, `${layer.opacity})`));
+      gradient.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, layer.radius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    });
+  }, []);
+
   // 初始化 canvas 尺寸
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -218,6 +261,9 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 绘制月亮光晕（最底层）
+    drawMoonGlow(ctx, canvas.width, canvas.height, time, isDark);
+
     // 绘制星云（在星星之前，作为背景层）
     drawNebulas(ctx, nebulasRef.current, time, canvas.width, canvas.height, isDark);
 
@@ -225,7 +271,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     drawStars(ctx, starsRef.current, time, isDark);
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [drawStars, drawNebulas]);
+  }, [drawStars, drawNebulas, drawMoonGlow]);
 
   // 初始化
   useEffect(() => {

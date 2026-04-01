@@ -13,15 +13,29 @@ interface Star {
   layer: 'far' | 'near';
 }
 
+// 星云配置
+interface Nebula {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  opacity: number;
+  driftX: number;
+  driftY: number;
+  phase: number;
+}
+
 // 主题颜色配置
 const COLORS = {
   light: {
     star: 'rgba(128, 90, 213, 0.8)', // primary 紫色
     starFar: 'rgba(128, 90, 213, 0.4)',
+    nebula: 'rgba(128, 90, 213, 0.08)',
   },
   dark: {
     star: 'rgba(180, 150, 255, 0.9)',
     starFar: 'rgba(180, 150, 255, 0.5)',
+    nebula: 'rgba(128, 90, 213, 0.12)',
   },
 };
 
@@ -39,6 +53,28 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const starsRef = useRef<Star[]>([]);
+  const nebulasRef = useRef<Nebula[]>([]);
+
+  // 生成星云
+  const generateNebulas = useCallback((width: number, height: number): Nebula[] => {
+    const nebulas: Nebula[] = [];
+    const count = Math.floor(Math.random() * 2) + 3;
+
+    for (let i = 0; i < count; i++) {
+      nebulas.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 100 + 80,
+        color: COLORS.light.nebula,
+        opacity: Math.random() * 0.08 + 0.03,
+        driftX: (Math.random() - 0.5) * 0.1,
+        driftY: (Math.random() - 0.5) * 0.1,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+
+    return nebulas;
+  }, []);
 
   // 生成星星
   const generateStars = useCallback((width: number, height: number): Star[] => {
@@ -111,6 +147,47 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     });
   }, []);
 
+  // 绘制星云
+  const drawNebulas = useCallback((
+    ctx: CanvasRenderingContext2D,
+    nebulas: Nebula[],
+    time: number,
+    width: number,
+    height: number,
+    isDark: boolean
+  ) => {
+    nebulas.forEach((nebula) => {
+      // 缓慢漂移
+      nebula.x += nebula.driftX;
+      nebula.y += nebula.driftY;
+
+      // 边界循环
+      if (nebula.x < -nebula.radius) nebula.x = width + nebula.radius;
+      if (nebula.x > width + nebula.radius) nebula.x = -nebula.radius;
+      if (nebula.y < -nebula.radius) nebula.y = height + nebula.radius;
+      if (nebula.y > height + nebula.radius) nebula.y = -nebula.radius;
+
+      // 呼吸效果
+      const breathe = Math.sin(time * 0.2 + nebula.phase) * 0.02;
+      const currentOpacity = nebula.opacity + breathe;
+      const currentRadius = nebula.radius + Math.sin(time * 0.15 + nebula.phase) * 10;
+
+      const gradient = ctx.createRadialGradient(
+        nebula.x, nebula.y, 0,
+        nebula.x, nebula.y, currentRadius
+      );
+
+      const color = isDark ? COLORS.dark.nebula : COLORS.light.nebula;
+      gradient.addColorStop(0, color.replace(/[\d.]+\)$/, `${currentOpacity})`));
+      gradient.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.arc(nebula.x, nebula.y, currentRadius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    });
+  }, []);
+
   // 初始化 canvas 尺寸
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -124,7 +201,10 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
 
     // 重新生成星星
     starsRef.current = generateStars(canvas.width, canvas.height);
-  }, [generateStars]);
+
+    // 重新生成星云
+    nebulasRef.current = generateNebulas(canvas.width, canvas.height);
+  }, [generateStars, generateNebulas]);
 
   // 动画循环
   const animate = useCallback(() => {
@@ -138,11 +218,14 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 绘制星云（在星星之前，作为背景层）
+    drawNebulas(ctx, nebulasRef.current, time, canvas.width, canvas.height, isDark);
+
     // 绘制星星
     drawStars(ctx, starsRef.current, time, isDark);
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [drawStars]);
+  }, [drawStars, drawNebulas]);
 
   // 初始化
   useEffect(() => {

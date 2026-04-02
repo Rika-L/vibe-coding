@@ -71,6 +71,13 @@ export function ChatMessages({ messages, status }: ChatMessagesProps) {
               }
               return null;
             })}
+            {message.role === 'assistant' && status === 'streaming' && message.id === messages[messages.length - 1]?.id && (
+              <span className="inline-flex gap-1 ml-1">
+                <span className="animate-bounce">.</span>
+                <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>.</span>
+                <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>.</span>
+              </span>
+            )}
           </div>
         </div>
       ))}

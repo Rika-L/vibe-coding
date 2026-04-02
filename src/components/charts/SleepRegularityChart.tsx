@@ -35,8 +35,8 @@ export function SleepRegularityChart({ data }: SleepRegularityChartProps) {
     });
 
     // Calculate regularity score
-    const bedTimes = scatterData.map(d => d[0]);
-    const wakeTimes = scatterData.map(d => d[1]);
+    const bedTimes = scatterData.map(d => Number(d[0]));
+    const wakeTimes = scatterData.map(d => Number(d[1]));
     const bedStd = calculateStd(bedTimes);
     const wakeStd = calculateStd(wakeTimes);
     const regularityScore = Math.max(0, 100 - (bedStd + wakeStd) * 10);

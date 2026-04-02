@@ -203,7 +203,10 @@ export default function HistoryPage() {
     setStartDate('');
     setEndDate('');
     setPagination(prev => ({ ...prev, page: 1 }));
+    setFiltering(true);
     setLoading(true);
+    // 主动触发数据获取，确保 loading 状态能被正确重置
+    fetchData();
   };
 
   const handleDeleteReport = async (reportId: string) => {

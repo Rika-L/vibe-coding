@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -12,7 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Trash2, MessageSquare } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { Plus, Trash2, MessageSquare, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -36,6 +42,11 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+
+  // 重命名相关状态
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchConversations = async () => {
     try {
@@ -88,6 +99,59 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
     }
   };
 
+  // 开始重命名
+  const startRename = (conv: Conversation, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setEditingId(conv.id);
+    setEditingTitle(conv.title);
+    // 自动聚焦输入框
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  // 取消重命名
+  const cancelRename = () => {
+    setEditingId(null);
+    setEditingTitle('');
+  };
+
+  // 提交重命名
+  const submitRename = async (id: string) => {
+    const title = editingTitle.trim();
+    if (!title) {
+      cancelRename();
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/conversations/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error('重命名失败');
+      toast.success('对话已重命名');
+      fetchConversations();
+    }
+    catch (error) {
+      console.error('Rename conversation error:', error);
+      toast.error('重命名失败');
+    }
+    finally {
+      setEditingId(null);
+      setEditingTitle('');
+    }
+  };
+
+  // 处理输入框按键
+  const handleRenameKeyDown = (e: React.KeyboardEvent, id: string) => {
+    if (e.key === 'Enter') {
+      submitRename(id);
+    }
+    else if (e.key === 'Escape') {
+      cancelRename();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="w-64 border-r bg-muted/30 p-4">
@@ -115,29 +179,72 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
             )
           : (
               conversations.map(conv => (
-                <div
-                  key={conv.id}
-                  onClick={() => onSelect(conv.id)}
-                  className={cn(
-                    'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 group transition-colors cursor-pointer',
-                    selectedId === conv.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted',
-                  )}
-                >
-                  <MessageSquare className="h-4 w-4 shrink-0" />
-                  <span className="flex-1 truncate">{conv.title}</span>
-                  <button
-                    type="button"
-                    onClick={e => handleDeleteClick(conv.id, e)}
-                    className={cn(
-                      'opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/20',
-                      selectedId === conv.id && 'hover:bg-primary-foreground/20',
-                    )}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
+                <ContextMenu key={conv.id}>
+                  <ContextMenuTrigger>
+                    <div
+                      onClick={() => onSelect(conv.id)}
+                      onDoubleClick={() => startRename(conv)}
+                      className={cn(
+                        'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 group transition-colors cursor-pointer',
+                        selectedId === conv.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted',
+                      )}
+                    >
+                      <MessageSquare className="h-4 w-4 shrink-0" />
+                      {editingId === conv.id
+                        ? (
+                            <input
+                              ref={inputRef}
+                              type="text"
+                              value={editingTitle}
+                              onChange={e => setEditingTitle(e.target.value)}
+                              onBlur={() => submitRename(conv.id)}
+                              onKeyDown={e => handleRenameKeyDown(e, conv.id)}
+                              onClick={e => e.stopPropagation()}
+                              className={cn(
+                                'flex-1 min-w-0 bg-transparent border-b outline-none px-0 py-0 text-sm',
+                                selectedId === conv.id
+                                  ? 'border-primary-foreground text-primary-foreground placeholder:text-primary-foreground/50'
+                                  : 'border-primary text-foreground placeholder:text-muted-foreground',
+                              )}
+                            />
+                          )
+                        : (
+                            <span className="flex-1 truncate">{conv.title}</span>
+                          )}
+                      {editingId !== conv.id && (
+                        <button
+                          type="button"
+                          onClick={e => handleDeleteClick(conv.id, e)}
+                          className={cn(
+                            'opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/20',
+                            selectedId === conv.id && 'hover:bg-primary-foreground/20',
+                          )}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem onClick={() => startRename(conv)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      重命名
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={(e) => {
+                        // 阻止事件冒泡，避免触发选中
+                        e.stopPropagation();
+                        handleDeleteClick(conv.id, e as unknown as React.MouseEvent);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      删除
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               ))
             )}
       </div>

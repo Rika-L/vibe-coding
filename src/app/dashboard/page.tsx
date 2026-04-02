@@ -6,11 +6,8 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
-  Clock,
-  Calendar,
-  TrendingUp,
-  Database,
   Moon,
+  Calendar,
   Loader2,
   AlertCircle,
   History,
@@ -23,6 +20,11 @@ import {
   SleepTrendChart,
   SleepStructureChart,
   SleepScoreGauge,
+  BedTimeCard,
+  WakeTimeCard,
+  HeartRateCard,
+  HeartRateChart,
+  SleepRegularityChart,
 } from '@/components/charts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +43,9 @@ interface SleepRecord {
   lightSleep: number | null;
   remSleep: number | null;
   sleepScore: number | null;
+  bedTime: string | null;
+  wakeTime: string | null;
+  heartRate: number | null;
 }
 
 export default function Dashboard() {
@@ -189,20 +194,46 @@ export default function Dashboard() {
     rem: r.remSleep,
   }));
 
-  const avgDuration
-    = records.length > 0
-      ? records.reduce((sum, r) => sum + r.sleepDuration, 0) / records.length
-      : 0;
+  const bedTimeData = records
+    .filter(r => r.bedTime !== null)
+    .map(r => ({
+      date: new Date(r.date).toLocaleDateString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      bedTime: r.bedTime!,
+    }));
 
-  const recordsWithDeep = records.filter(r => r.deepSleep !== null);
-  const avgDeep = recordsWithDeep.length > 0
-    ? records.reduce((sum, r) => sum + (r.deepSleep || 0), 0) / recordsWithDeep.length
-    : 0;
+  const wakeTimeData = records
+    .filter(r => r.wakeTime !== null)
+    .map(r => ({
+      date: new Date(r.date).toLocaleDateString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      wakeTime: r.wakeTime!,
+    }));
 
-  const dataCompleteness
-    = records.length > 0
-      ? (records.filter(r => r.sleepScore).length / records.length) * 100
-      : 0;
+  const heartRateData = records
+    .filter(r => r.heartRate !== null)
+    .map(r => ({
+      date: new Date(r.date).toLocaleDateString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      heartRate: r.heartRate!,
+    }));
+
+  const regularityData = records
+    .filter(r => r.bedTime !== null && r.wakeTime !== null)
+    .map(r => ({
+      date: new Date(r.date).toLocaleDateString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      bedTime: r.bedTime!,
+      wakeTime: r.wakeTime!,
+    }));
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
@@ -366,46 +397,39 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Stats Grid */}
+          {/* Stats Grid - 4 columns with new cards */}
           <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <StatCard
-              icon={Clock}
-              title="平均睡眠时长"
-              value={`${avgDuration.toFixed(1)}h`}
-              subtitle="每日平均"
-            />
-            <StatCard
-              icon={Calendar}
-              title="记录天数"
-              value={`${records.length}天`}
-              subtitle="累计记录"
-            />
-            <StatCard
-              icon={TrendingUp}
-              title="平均深睡"
-              value={`${avgDeep.toFixed(1)}h`}
-              subtitle="深度睡眠"
-            />
-            <StatCard
-              icon={Database}
-              title="数据完整度"
-              value={`${Math.round(dataCompleteness)}%`}
-              subtitle="有效数据"
-            />
-          </div>
-
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Sleep Score Gauge */}
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium">睡眠评分</CardTitle>
-              </CardHeader>
-              <CardContent>
+            {/* Sleep Score */}
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+              <CardContent className="p-4">
                 <SleepScoreGauge score={Math.round(avgScore)} />
               </CardContent>
             </Card>
 
+            {/* Bed Time */}
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5">
+              <CardContent className="p-4">
+                <BedTimeCard data={bedTimeData} />
+              </CardContent>
+            </Card>
+
+            {/* Wake Time */}
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/5">
+              <CardContent className="p-4">
+                <WakeTimeCard data={wakeTimeData} />
+              </CardContent>
+            </Card>
+
+            {/* Heart Rate */}
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-rose-500/30 hover:shadow-lg hover:shadow-rose-500/5">
+              <CardContent className="p-4">
+                <HeartRateCard data={heartRateData} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Sleep Trend Chart */}
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm lg:col-span-2">
               <CardHeader className="pb-2">
@@ -415,17 +439,37 @@ export default function Dashboard() {
                 <SleepTrendChart data={chartData} />
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sleep Structure Chart */}
-          <Card className="mt-6 border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">平均睡眠结构</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SleepStructureChart data={structureData} />
-            </CardContent>
-          </Card>
+            {/* Sleep Structure Chart */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">平均睡眠结构</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SleepStructureChart data={structureData} />
+              </CardContent>
+            </Card>
+
+            {/* Heart Rate Chart */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">心率趋势</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HeartRateChart data={heartRateData} />
+              </CardContent>
+            </Card>
+
+            {/* Sleep Regularity Chart */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">睡眠规律</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SleepRegularityChart data={regularityData} />
+              </CardContent>
+            </Card>
+          </div>
         </main>
       )}
 
@@ -437,30 +481,5 @@ export default function Dashboard() {
         loading={analyzing}
       />
     </div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  title,
-  value,
-  subtitle,
-}: {
-  icon: React.ElementType;
-  title: string;
-  value: string;
-  subtitle: string;
-}) {
-  return (
-    <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
-      <CardContent className="p-6">
-        <div className="mb-3 inline-flex rounded-lg bg-primary/10 p-2 transition-transform duration-300 group-hover:scale-110">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <p className="text-3xl font-bold text-foreground">{value}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </CardContent>
-    </Card>
   );
 }

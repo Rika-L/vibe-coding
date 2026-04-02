@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Upload, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,9 +34,7 @@ export function ProfileForm({ open, onOpenChange, user, onSuccess }: ProfileForm
   const [name, setName] = useState(user?.name || '');
   const [avatar, setAvatar] = useState(user?.avatar || '😴');
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 当弹窗打开或用户数据变化时，同步状态
   useEffect(() => {
     if (open && user) {
       setName(user.name || '');
@@ -46,28 +44,6 @@ export function ProfileForm({ open, onOpenChange, user, onSuccess }: ProfileForm
 
   const handleAvatarSelect = (emoji: string) => {
     setAvatar(emoji);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('请选择图片文件');
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('图片大小不能超过 2MB');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setAvatar(base64);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async () => {
@@ -116,38 +92,14 @@ export function ProfileForm({ open, onOpenChange, user, onSuccess }: ProfileForm
 
         <div className="space-y-6 py-4">
           <div>
-            <label className="text-sm font-medium mb-3 block">头像</label>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-3xl border-2 border-dashed">
-                {avatar.startsWith('data:') ? (
-                  <img src={avatar} alt="avatar" className="h-full w-full rounded-full object-cover" />
-                ) : (
-                  avatar
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                上传图片
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
+            <label className="text-sm font-medium mb-3 block">选择头像</label>
             <div className="flex flex-wrap gap-2">
               {PRESET_AVATARS.map(emoji => (
                 <button
                   key={emoji}
                   type="button"
                   onClick={() => handleAvatarSelect(emoji)}
-                  className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
+                  className={`w-12 h-12 rounded-full text-2xl flex items-center justify-center transition-all ${
                     avatar === emoji
                       ? 'bg-primary/20 ring-2 ring-primary'
                       : 'bg-muted hover:bg-muted/80'

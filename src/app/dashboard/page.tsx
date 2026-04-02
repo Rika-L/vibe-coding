@@ -418,6 +418,35 @@ export default function Dashboard() {
 
           {/* Stats Grid - 4 columns with new cards */}
           <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {/* Sleep Efficiency - 在其他卡片之前 */}
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  睡眠效率
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const latestRecord = records[0];
+                  const efficiency = calculateEfficiency(latestRecord);
+                  const status = getEfficiencyStatus(efficiency);
+                  return (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold">{efficiency}</span>
+                        <span className="text-lg text-muted-foreground">%</span>
+                      </div>
+                      <div className="mt-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white ${status.color}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
             {/* Sleep Score */}
             <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
               <CardContent className="p-4">

@@ -105,8 +105,8 @@ export function SleepTrendChart({ data }: SleepTrendChartProps) {
           lineStyle: { width: 3 },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: `${primaryColor}40` },
-              { offset: 1, color: `${primaryColor}05` },
+              { offset: 0, color: 'rgba(14, 165, 233, 0.3)' },
+              { offset: 1, color: 'rgba(14, 165, 233, 0.02)' },
             ]),
           },
         },

@@ -77,6 +77,7 @@ export function HeartRateChart({ data }: HeartRateChartProps) {
           type: 'line',
           data: validData.map(d => d.heartRate),
           smooth: true,
+          sampling: 'lttb',
           symbol: 'circle',
           symbolSize: 6,
           itemStyle: {

@@ -490,7 +490,7 @@ export default function HistoryPage() {
                               key={record.id}
                               onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
                               className={cn(
-                                'cursor-pointer border-b border-border/50 transition-all duration-200 hover:bg-muted hover:scale-[1.01]',
+                                'cursor-pointer border-b border-border/50 transition-all duration-200 hover:bg-muted',
                                 record.id === selectedId
                                   ? 'bg-primary/10 border-l-2 border-l-primary'
                                   : 'hover:bg-muted/50',

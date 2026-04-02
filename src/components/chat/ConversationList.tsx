@@ -185,7 +185,7 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
                       onClick={() => onSelect(conv.id)}
                       onDoubleClick={() => startRename(conv)}
                       className={cn(
-                        'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 group transition-colors cursor-pointer',
+                        'w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 group transition-all cursor-pointer hover:bg-muted hover:scale-[1.02]',
                         selectedId === conv.id
                           ? 'bg-primary text-primary-foreground'
                           : 'hover:bg-muted',

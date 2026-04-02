@@ -15,8 +15,16 @@ import {
   Search,
   X,
   Settings,
+  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   SleepTrendChart,
   SleepStructureChart,
@@ -79,9 +87,19 @@ export default function Dashboard() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filtering, setFiltering] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ name: string | null; avatar: string | null } | null>(null);
 
   useEffect(() => {
     fetchData();
+    // 获取用户信息
+    fetch('/api/user/profile')
+      .then(res => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.user) {
+          setUserInfo(data.user);
+        }
+      })
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -276,15 +294,27 @@ export default function Dashboard() {
                 历史数据
               </Button>
             </Link>
-            <Link href="/settings">
-              <Button variant="outline" size="sm" aria-label="设置">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </Link>
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={handleLogout} aria-label="登出">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <span className="text-lg">{userInfo?.avatar || '👤'}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    用户设置
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
+                  <LogOut className="h-4 w-4" />
+                  退出登录
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               onClick={() => setDialogOpen(true)}
               disabled={analyzing || loading || loadError || records.length === 0}

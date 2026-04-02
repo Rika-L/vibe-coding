@@ -95,3 +95,45 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: '未登录' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const deleteAll = searchParams.get('all');
+
+    // 清空全部记录
+    if (deleteAll === 'true') {
+      await prisma.sleepRecord.deleteMany({
+        where: { userId: user.userId },
+      });
+      return NextResponse.json({ success: true, deletedCount: 'all' });
+    }
+
+    // 批量删除
+    const body = await request.json();
+    const { ids } = body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: '请选择要删除的记录' }, { status: 400 });
+    }
+
+    const result = await prisma.sleepRecord.deleteMany({
+      where: {
+        id: { in: ids },
+        userId: user.userId,
+      },
+    });
+
+    return NextResponse.json({ success: true, deletedCount: result.count });
+  }
+  catch (error) {
+    console.error('Batch delete sleep records error:', error);
+    return NextResponse.json({ error: '删除记录失败' }, { status: 500 });
+  }
+}

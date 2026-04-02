@@ -416,8 +416,8 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Stats Grid - 4 columns with new cards */}
-          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {/* Stats Grid - 5 columns */}
+          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {/* Sleep Efficiency - 在其他卡片之前 */}
             <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
               <CardHeader className="pb-2">

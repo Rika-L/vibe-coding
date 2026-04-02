@@ -1,78 +1,47 @@
 # 技术栈
 
-> 版本号以 `package.json` 为准，以下仅供参考
+版本以 `package.json` 为准。
 
-## 核心框架
+## 核心
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Next.js | 16.2.1 | 全栈框架 (App Router) |
-| React | 19.2.4 | UI 库 |
-| TypeScript | 5.x | 类型安全 |
+| 技术 | 用途 |
+|------|------|
+| Next.js 16 | 全栈框架 (App Router) |
+| React 19 | UI 库 |
+| TypeScript | 类型安全 |
+| Tailwind CSS 4 | 样式 |
+| shadcn/ui | 组件库 |
 
-## 样式
+## 数据
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Tailwind CSS | 4.x | 原子化 CSS |
-| shadcn/ui | 4.1.1 | 组件库 (Radix UI + Tailwind) |
-| next-themes | 0.4.6 | 主题切换 |
-| lucide-react | 1.7.0 | 图标库 |
-
-## 数据库
-
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Prisma | 5.22.0 | ORM |
-| SQLite | - | 开发数据库 |
+| 技术 | 用途 |
+|------|------|
+| Prisma | ORM |
+| SQLite | 开发数据库 |
 
 ## 认证
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| jose | 6.2.2 | JWT 生成/验证 |
-| bcryptjs | 3.0.3 | 密码哈希 |
+| 技术 | 用途 |
+|------|------|
+| jose | JWT |
+| bcryptjs | 密码哈希 |
 
-## AI 服务
+## AI
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| ai | 6.0.141 | AI SDK 核心 |
-| @ai-sdk/react | 3.0.144 | React Hooks (useChat) |
-| @ai-sdk/openai | - | OpenAI 兼容 Provider |
+| 技术 | 用途 |
+|------|------|
+| ai | AI SDK 核心 |
+| @ai-sdk/react | useChat Hook |
+| @ai-sdk/openai | OpenAI 兼容 Provider |
 
-**注意**：AI SDK 5.0+ 默认使用 Responses API，讯飞星火只支持 Chat Completions API，需要使用 `.chat()` 方法显式指定。
+**注意**: AI SDK 5.0 默认用 Responses API，讯飞只支持 Chat Completions API，需用 `.chat()` 显式指定。
 
-## 数据处理
+## 其他
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| papaparse | 5.5.3 | CSV 解析 |
-| date-fns | 4.1.0 | 日期处理 |
-| zod | 4.3.6 | 运行时验证 |
-
-## 可视化
-
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| echarts | 6.0.0 | 图表库 |
-
-## 工具
-
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| sonner | 2.0.7 | Toast 通知 |
-| clsx | 2.1.1 | 类名合并 |
-| tailwind-merge | 3.5.0 | Tailwind 类名合并 |
-
----
-
-## 新增依赖记录
-
-安装新依赖后，在此记录：
-
-| 日期 | 包名 | 版本 | 用途 |
-|------|------|------|------|
-| 2024-04 | react-day-picker | 9.14.0 | 日期选择器 |
-| 2024-04 | @base-ui/react | 1.3.0 | shadcn/ui 依赖 |
-| 2024-04 | tw-animate-css | 1.4.0 | Tailwind 动画 |
+| 技术 | 用途 |
+|------|------|
+| echarts | 图表 |
+| papaparse | CSV 解析 |
+| date-fns | 日期处理 |
+| zod | 验证 |
+| sonner | Toast |

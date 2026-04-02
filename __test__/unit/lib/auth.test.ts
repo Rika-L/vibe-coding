@@ -3,10 +3,33 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 // Mock environment variables before importing auth module
 vi.stubEnv('JWT_SECRET', 'test-jwt-secret-key-for-testing')
 
+// Mock cookies
+const mockCookieStore = {
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+}
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue(mockCookieStore),
+}))
+
 // Import after mocking
-const { hashPassword, verifyPassword, signToken, verifyToken } = await import('@/lib/auth')
+const {
+  hashPassword,
+  verifyPassword,
+  signToken,
+  verifyToken,
+  setAuthCookie,
+  getCurrentUser,
+  clearAuthCookie,
+} = await import('@/lib/auth')
 
 describe('auth utilities', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   describe('hashPassword & verifyPassword', () => {
     it('should hash password correctly', async () => {
       const password = 'testPassword123'
@@ -61,6 +84,48 @@ describe('auth utilities', () => {
     it('should return null for empty token', async () => {
       const verified = await verifyToken('')
       expect(verified).toBeNull()
+    })
+  })
+
+  describe('Cookie operations', () => {
+    it('should set auth cookie', async () => {
+      const token = 'test-token-123'
+      await setAuthCookie(token)
+
+      expect(mockCookieStore.set).toHaveBeenCalledWith(
+        'auth-token',
+        token,
+        expect.objectContaining({
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+        }),
+      )
+    })
+
+    it('should get current user from cookie', async () => {
+      const payload = { userId: 'user-123', email: 'test@example.com' }
+      const token = await signToken(payload)
+
+      mockCookieStore.get.mockReturnValue({ value: token })
+
+      const user = await getCurrentUser()
+
+      expect(user).toMatchObject(payload)
+    })
+
+    it('should return null when no auth cookie', async () => {
+      mockCookieStore.get.mockReturnValue(undefined)
+
+      const user = await getCurrentUser()
+
+      expect(user).toBeNull()
+    })
+
+    it('should clear auth cookie', async () => {
+      await clearAuthCookie()
+
+      expect(mockCookieStore.delete).toHaveBeenCalledWith('auth-token')
     })
   })
 })

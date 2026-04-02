@@ -1,15 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock OpenAI before importing ai module
-const mockCreate = vi.fn().mockResolvedValue({
-  choices: [
-    {
-      message: {
-        content: '这是 AI 分析结果'
-      }
-    }
-  ]
-})
+// Create mock functions outside
+const mockCreate = vi.fn()
 
 // Use a class constructor for proper mocking
 class MockOpenAI {
@@ -34,37 +26,54 @@ const { generateSleepAnalysis, aiModel } = await import('@/lib/ai')
 
 describe('ai service', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
+    // 设置默认成功响应
+    mockCreate.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: '这是 AI 分析结果'
+          }
+        }
+      ]
+    })
   })
 
   afterEach(() => {
-    vi.useRealTimers()
     vi.clearAllMocks()
   })
 
   describe('generateSleepAnalysis', () => {
     it('should return AI analysis result', async () => {
       const prompt = '分析我的睡眠数据'
-      const resultPromise = generateSleepAnalysis(prompt)
-
-      // Flush all pending timers/promises
-      await vi.runAllTimersAsync()
-
-      const result = await resultPromise
+      const result = await generateSleepAnalysis(prompt)
 
       expect(result).toBe('这是 AI 分析结果')
     })
 
     it('should be available through aiModel.generate', async () => {
       const prompt = '分析我的睡眠数据'
-      const resultPromise = aiModel.generate(prompt)
-
-      // Flush all pending timers/promises
-      await vi.runAllTimersAsync()
-
-      const result = await resultPromise
+      const result = await aiModel.generate(prompt)
 
       expect(result).toBe('这是 AI 分析结果')
+    })
+
+    it('should return empty string when AI returns no content', async () => {
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: null } }]
+      })
+
+      const prompt = '分析我的睡眠数据'
+      const result = await generateSleepAnalysis(prompt)
+
+      expect(result).toBe('')
+    })
+
+    it('should throw on non-retryable error', async () => {
+      mockCreate.mockRejectedValue(new Error('Invalid API key'))
+
+      const prompt = '分析我的睡眠数据'
+
+      await expect(generateSleepAnalysis(prompt)).rejects.toThrow('Invalid API key')
     })
   })
 })

@@ -48,6 +48,25 @@ interface SleepRecord {
   heartRate: number | null;
 }
 
+// 计算睡眠效率
+const calculateEfficiency = (record: SleepRecord): number => {
+  if (!record.bedTime || !record.wakeTime || record.sleepDuration <= 0) {
+    return 0;
+  }
+  const bedTime = new Date(record.bedTime).getTime();
+  const wakeTime = new Date(record.wakeTime).getTime();
+  const timeInBed = (wakeTime - bedTime) / (1000 * 60 * 60); // 转换为小时
+  if (timeInBed <= 0) return 0;
+  return Math.round((record.sleepDuration / timeInBed) * 100);
+};
+
+// 获取状态标签
+const getEfficiencyStatus = (efficiency: number): { label: string; color: string } => {
+  if (efficiency >= 85) return { label: '良好', color: 'bg-green-500' };
+  if (efficiency >= 70) return { label: '一般', color: 'bg-yellow-500' };
+  return { label: '需改善', color: 'bg-red-500' };
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const [records, setRecords] = useState<SleepRecord[]>([]);

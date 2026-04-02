@@ -93,6 +93,11 @@ export default function HistoryPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteRecordDialogOpen, setDeleteRecordDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<SleepRecord | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
+  const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -252,6 +257,89 @@ export default function HistoryPage() {
   const handleDeleteRecord = (record: SleepRecord) => {
     setSelectedRecord(record);
     setDeleteRecordDialogOpen(true);
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      }
+      else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds(new Set());
+      setSelectAll(false);
+    }
+    else {
+      setSelectedIds(new Set(records.map(r => r.id)));
+      setSelectAll(true);
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    setDeletingId('batch');
+    try {
+      const res = await fetch('/api/sleep-records', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || '删除失败');
+      }
+
+      toast.success(`已删除 ${selectedIds.size} 条记录`);
+      setSelectedIds(new Set());
+      setSelectAll(false);
+      setBatchDeleteDialogOpen(false);
+      fetchData();
+    }
+    catch (error) {
+      toast.error(error instanceof Error ? error.message : '删除失败');
+    }
+    finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (confirmText !== '确认清空') return;
+
+    setDeletingId('clear');
+    try {
+      const res = await fetch('/api/sleep-records?all=true', {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || '清空失败');
+      }
+
+      toast.success('已清空所有记录');
+      setSelectedIds(new Set());
+      setSelectAll(false);
+      setClearAllDialogOpen(false);
+      setConfirmText('');
+      fetchData();
+    }
+    catch (error) {
+      toast.error(error instanceof Error ? error.message : '清空失败');
+    }
+    finally {
+      setDeletingId(null);
+    }
   };
 
   const confirmDeleteRecord = async () => {
@@ -439,6 +527,40 @@ export default function HistoryPage() {
               </CardContent>
             </Card>
 
+            {records.length > 0 && (
+              <div className="mb-4 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  已选择
+                  {' '}
+                  <span className="font-medium text-foreground">{selectedIds.size}</span>
+                  {' '}
+                  条记录
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBatchDeleteDialogOpen(true)}
+                    disabled={selectedIds.size === 0 || !!deletingId}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    批量删除
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setClearAllDialogOpen(true)}
+                    disabled={pagination.total === 0 || !!deletingId}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    清空全部
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Data Table */}
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="pb-2">
@@ -461,6 +583,14 @@ export default function HistoryPage() {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-border">
+                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-10">
+                              <input
+                                type="checkbox"
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                                className="h-4 w-4 rounded border-border"
+                              />
+                            </th>
                             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                               日期
                             </th>
@@ -496,6 +626,15 @@ export default function HistoryPage() {
                                   : 'hover:bg-muted/50',
                               )}
                             >
+                              <td className="px-4 py-3 w-10">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedIds.has(record.id)}
+                                  onChange={() => handleSelectOne(record.id)}
+                                  onClick={e => e.stopPropagation()}
+                                  className="h-4 w-4 rounded border-border"
+                                />
+                              </td>
                               <td className="px-4 py-3 text-sm">
                                 {new Date(record.date).toLocaleDateString('zh-CN')}
                               </td>
@@ -802,6 +941,99 @@ export default function HistoryPage() {
                   )
                 : (
                     '确认删除'
+                  )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Batch Delete Confirmation Dialog */}
+      <AlertDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center pt-6 pb-2">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <Trash2 className="h-7 w-7 text-destructive" />
+            </div>
+            <AlertDialogHeader className="items-center text-center">
+              <AlertDialogTitle className="text-xl">确认删除选中的记录？</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                即将删除
+                {' '}
+                <span className="font-medium text-destructive">{selectedIds.size}</span>
+                {' '}
+                条睡眠记录，此操作无法撤销。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBatchDelete}
+              disabled={deletingId === 'batch'}
+              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
+            >
+              {deletingId === 'batch'
+                ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      删除中...
+                    </>
+                  )
+                : (
+                    '确认删除'
+                  )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear All Confirmation Dialog */}
+      <AlertDialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center pt-6 pb-2">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <Trash2 className="h-7 w-7 text-destructive" />
+            </div>
+            <AlertDialogHeader className="items-center text-center">
+              <AlertDialogTitle className="text-xl text-destructive">确认清空所有记录？</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                此操作将删除所有
+                {' '}
+                <span className="font-medium text-destructive">{pagination.total}</span>
+                {' '}
+                条睡眠记录，且无法恢复！
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <div className="px-6 pb-4">
+            <Input
+              value={confirmText}
+              onChange={e => setConfirmText(e.target.value)}
+              placeholder='请输入"确认清空"'
+              className="text-center"
+            />
+          </div>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            <AlertDialogCancel
+              className="w-full sm:w-auto"
+              onClick={() => setConfirmText('')}
+            >
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAll}
+              disabled={confirmText !== '确认清空' || deletingId === 'clear'}
+              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
+            >
+              {deletingId === 'clear'
+                ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      清空中...
+                    </>
+                  )
+                : (
+                    '确认清空'
                   )}
             </AlertDialogAction>
           </AlertDialogFooter>

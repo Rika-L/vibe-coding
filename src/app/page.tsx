@@ -3,13 +3,20 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
+import { Upload, FileUp, Loader2, Moon, Brain, BarChart3, Lightbulb, LogIn, LogOut, LayoutDashboard, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SleepRecordDialog } from '@/components/sleep-record-dialog';
 import { CanvasBackground } from '@/components/canvas-background';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface User {
   id: string;
@@ -17,11 +24,17 @@ interface User {
   name: string | null;
 }
 
+interface UserInfo {
+  name: string | null;
+  avatar: string | null;
+}
+
 export default function Home() {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
@@ -42,6 +55,15 @@ export default function Home() {
       .finally(() => {
         setCheckingAuth(false);
       });
+    // 获取用户详细信息（包括头像）
+    fetch('/api/user/profile')
+      .then(res => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.user) {
+          setUserInfo(data.user);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleLogout = async () => {
@@ -164,10 +186,22 @@ export default function Home() {
                           看板
                         </Button>
                       </Link>
-                      <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-                        <LogOut className="h-4 w-4" />
-                        登出
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="outline-none">
+                          <span className="text-lg cursor-pointer">{userInfo?.avatar || '👤'}</span>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => router.push('/settings')} className="flex items-center gap-2">
+                            <UserIcon className="h-4 w-4" />
+                            用户设置
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
+                            <LogOut className="h-4 w-4" />
+                            退出登录
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   )
                 : (

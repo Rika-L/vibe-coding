@@ -19,6 +19,7 @@ import {
   Trash2,
   Star,
   Pencil,
+  User as UserIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,13 @@ import {
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SleepRecordDialog } from '@/components/sleep-record-dialog';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type TabType = 'records' | 'reports';
 
@@ -98,6 +106,7 @@ export default function HistoryPage() {
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
   const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [userInfo, setUserInfo] = useState<{ name: string | null; avatar: string | null } | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -182,6 +191,18 @@ export default function HistoryPage() {
       fetchReports();
     }
   }, [activeTab, fetchData, fetchReports]);
+
+  // 获取用户信息
+  useEffect(() => {
+    fetch('/api/user/profile')
+      .then(res => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.user) {
+          setUserInfo(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -422,10 +443,22 @@ export default function HistoryPage() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={handleLogout} aria-label="登出">
-              <LogOut className="mr-2 h-4 w-4" />
-              登出
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="outline-none">
+                <span className="text-lg cursor-pointer">{userInfo?.avatar || '👤'}</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => router.push('/settings')} className="flex items-center gap-2">
+                  <UserIcon className="h-4 w-4" />
+                  用户设置
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
+                  <LogOut className="h-4 w-4" />
+                  退出登录
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

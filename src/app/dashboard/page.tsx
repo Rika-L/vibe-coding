@@ -14,6 +14,7 @@ import {
   LogOut,
   Search,
   X,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -273,6 +274,11 @@ export default function Dashboard() {
               <Button variant="outline" size="sm" className="gap-2">
                 <History className="h-4 w-4" />
                 历史数据
+              </Button>
+            </Link>
+            <Link href="/settings">
+              <Button variant="outline" size="sm" aria-label="设置">
+                <Settings className="h-4 w-4" />
               </Button>
             </Link>
             <ThemeToggle />

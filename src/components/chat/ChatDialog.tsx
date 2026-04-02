@@ -23,6 +23,7 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [input, setInput] = useState('');
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const hasInitializedRef = useRef(false);
 
   const {
@@ -83,6 +84,15 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
   useEffect(() => {
     if (open && !hasInitializedRef.current) {
       hasInitializedRef.current = true;
+      // 加载用户头像
+      fetch('/api/user/profile')
+        .then(res => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.user?.avatar) {
+            setUserAvatar(data.user.avatar);
+          }
+        })
+        .catch(() => {});
       // 先检查是否有历史对话
       fetch('/api/conversations')
         .then(res => res.json())
@@ -141,7 +151,7 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
             refreshTrigger={refreshTrigger}
           />
           <div className="flex-1 flex flex-col">
-            <ChatMessages messages={messages} status={status} />
+            <ChatMessages messages={messages} status={status} userAvatar={userAvatar} />
             <ChatInput
               input={input}
               isLoading={isLoading}

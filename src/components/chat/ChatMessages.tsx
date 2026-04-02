@@ -9,9 +9,10 @@ import type { UIMessage } from 'ai';
 interface ChatMessagesProps {
   messages: UIMessage[];
   status: 'streaming' | 'submitted' | 'ready' | 'error';
+  userAvatar?: string | null;
 }
 
-export function ChatMessages({ messages, status }: ChatMessagesProps) {
+export function ChatMessages({ messages, status, userAvatar }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // 自动滚动到底部
@@ -43,11 +44,15 @@ export function ChatMessages({ messages, status }: ChatMessagesProps) {
         >
           <div
             className={cn(
-              'shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
+              'shrink-0 w-8 h-8 rounded-full flex items-center justify-center overflow-hidden',
               message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted',
             )}
           >
-            {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+            {message.role === 'user' ? (
+              userAvatar ? <span className="text-lg">{userAvatar}</span> : <User className="h-4 w-4" />
+            ) : (
+              <Bot className="h-4 w-4" />
+            )}
           </div>
           <div
             className={cn(

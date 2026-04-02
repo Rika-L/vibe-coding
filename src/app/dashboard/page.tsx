@@ -296,17 +296,13 @@ export default function Dashboard() {
             </Link>
             <ThemeToggle />
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <span className="text-lg">{userInfo?.avatar || '👤'}</span>
-                </Button>
+              <DropdownMenuTrigger className="outline-none">
+                <span className="text-lg cursor-pointer">{userInfo?.avatar || '👤'}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    用户设置
-                  </Link>
+                <DropdownMenuItem onClick={() => router.push('/settings')} className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  用户设置
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">

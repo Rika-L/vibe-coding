@@ -130,10 +130,6 @@
 }
 
 @layer utilities {
-  .cursor-pointer {
-    cursor: pointer;
-  }
-
   .transition-interactive {
     transition: all 200ms ease;
   }

@@ -62,6 +62,7 @@ function Button({
       type={type}
       disabled={disabled || loading}
       className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
     >
       {loading && <Spinner className="mr-2" />}
       {children}

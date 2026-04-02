@@ -82,7 +82,17 @@ export function WakeTimeCard({ data }: WakeTimeCardProps) {
     const handleResize = () => chartInstance.current?.resize();
     window.addEventListener('resize', handleResize);
 
+    // Observer for theme changes
+    const observer = new MutationObserver(() => {
+      chartInstance.current?.resize();
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
     return () => {
+      observer.disconnect();
       window.removeEventListener('resize', handleResize);
       chartInstance.current?.dispose();
     };

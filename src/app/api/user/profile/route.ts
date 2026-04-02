@@ -63,9 +63,14 @@ export async function PUT(request: Request) {
       );
     }
 
+    // 只更新提供的字段
+    const updateData: { name?: string; avatar?: string } = {};
+    if (name !== undefined) updateData.name = name;
+    if (avatar !== undefined) updateData.avatar = avatar;
+
     const updatedUser = await prisma.user.update({
       where: { id: user.userId },
-      data: { name, avatar },
+      data: updateData,
       select: {
         id: true,
         email: true,

@@ -84,31 +84,45 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
   useEffect(() => {
     if (open && !hasInitializedRef.current) {
       hasInitializedRef.current = true;
-      // 加载用户头像
-      fetch('/api/user/profile')
-        .then(res => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data?.user?.avatar) {
-            setUserAvatar(data.user.avatar);
+      // 先检查登录状态
+      fetch('/api/auth/me')
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('未登录');
           }
+          return res.json();
         })
-        .catch(() => {});
-      // 先检查是否有历史对话
-      fetch('/api/conversations')
-        .then(res => res.json())
-        .then((data) => {
-          if (data.conversations?.length > 0) {
-            // 有历史对话，选中最新的一条（按 updatedAt 排序后的第一条）
-            const latestConversation = data.conversations[0];
-            loadConversation(latestConversation.id);
-          }
-          else {
-            // 没有历史对话，自动创建
-            handleNewConversation();
-          }
+        .then(() => {
+          // 已登录，加载用户头像
+          fetch('/api/user/profile')
+            .then(res => res.ok ? res.json() : null)
+            .then((data) => {
+              if (data?.user?.avatar) {
+                setUserAvatar(data.user.avatar);
+              }
+            })
+            .catch(() => {});
+          // 检查是否有历史对话
+          fetch('/api/conversations')
+            .then(res => res.json())
+            .then((data) => {
+              if (data.conversations?.length > 0) {
+                // 有历史对话，选中最新的一条（按 updatedAt 排序后的第一条）
+                const latestConversation = data.conversations[0];
+                loadConversation(latestConversation.id);
+              }
+              else {
+                // 没有历史对话，自动创建
+                handleNewConversation();
+              }
+            })
+            .catch(() => {
+              // 出错时静默处理，不阻断用户
+            });
         })
         .catch(() => {
-          // 出错时静默处理，不阻断用户
+          // 未登录，不创建对话
+          toast.error('请先登录');
         });
     }
   }, [open, handleNewConversation, loadConversation]);

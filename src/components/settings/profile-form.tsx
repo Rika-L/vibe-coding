@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,14 @@ export function ProfileForm({ open, onOpenChange, user, onSuccess }: ProfileForm
   const [avatar, setAvatar] = useState(user?.avatar || '😴');
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 当弹窗打开或用户数据变化时，同步状态
+  useEffect(() => {
+    if (open && user) {
+      setName(user.name || '');
+      setAvatar(user.avatar || '😴');
+    }
+  }, [open, user]);
 
   const handleAvatarSelect = (emoji: string) => {
     setAvatar(emoji);

@@ -637,7 +637,7 @@ export default function HistoryPage() {
                       return (
                         <div
                           key={report.id}
-                          className="group flex items-start justify-between gap-4 rounded-lg border border-border/50 p-4 transition-all hover:border-primary/30 hover:bg-muted/30 hover:scale-[1.01]"
+                          className="group flex items-start justify-between gap-4 rounded-lg border border-border/50 p-4 transition-all hover:border-primary/30 hover:bg-muted/30"
                         >
                           <Link
                             href={`/report/${report.id}`}

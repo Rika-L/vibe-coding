@@ -25,7 +25,7 @@ export function SleepStructureChart({ data }: SleepStructureChartProps) {
     const avgLight = data.reduce((sum, d) => sum + (d.light || 0), 0) / data.length;
     const avgRem = data.reduce((sum, d) => sum + (d.rem || 0), 0) / data.length;
 
-    const colors = ['#8b5cf6', '#22c55e', '#f59e0b'];
+    const colors = ['#6366f1', '#a78bfa', '#e879f9'];
 
     const option: echarts.EChartsOption = {
       tooltip: {

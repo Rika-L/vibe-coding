@@ -123,6 +123,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: '请选择要删除的记录' }, { status: 400 });
     }
 
+    // 验证 UUID 格式
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const invalidIds = ids.filter(id => !uuidRegex.test(id));
+    if (invalidIds.length > 0) {
+      return NextResponse.json({ error: '无效的记录ID' }, { status: 400 });
+    }
+
     const result = await prisma.sleepRecord.deleteMany({
       where: {
         id: { in: ids },

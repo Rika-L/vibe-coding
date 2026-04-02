@@ -54,3 +54,5 @@ prisma/test.db-journal
 playwright-report/
 test-results/
 coverage/
+
+file/

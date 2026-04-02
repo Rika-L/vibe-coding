@@ -331,7 +331,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+    <Card className="group border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.01]">
       <CardContent className="flex flex-col items-center gap-4 p-6">
         <div className="rounded-xl bg-primary/10 p-4 transition-transform duration-300 group-hover:scale-110">
           <Icon className="h-6 w-6 text-primary" />

@@ -490,7 +490,7 @@ export default function HistoryPage() {
                               key={record.id}
                               onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
                               className={cn(
-                                'cursor-pointer border-b border-border/50 transition-all duration-200',
+                                'cursor-pointer border-b border-border/50 transition-all duration-200 hover:bg-muted hover:scale-[1.01]',
                                 record.id === selectedId
                                   ? 'bg-primary/10 border-l-2 border-l-primary'
                                   : 'hover:bg-muted/50',
@@ -637,7 +637,7 @@ export default function HistoryPage() {
                       return (
                         <div
                           key={report.id}
-                          className="group flex items-start justify-between gap-4 rounded-lg border border-border/50 p-4 transition-all hover:border-primary/30 hover:bg-muted/30"
+                          className="group flex items-start justify-between gap-4 rounded-lg border border-border/50 p-4 transition-all hover:border-primary/30 hover:bg-muted/30 hover:scale-[1.01]"
                         >
                           <Link
                             href={`/report/${report.id}`}

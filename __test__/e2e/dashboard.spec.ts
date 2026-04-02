@@ -51,11 +51,12 @@ test.describe('Dashboard Page', () => {
       await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
 
       // Should show either header with title or empty state
-      const header = page.locator('text=睡眠数据看板');
-      const emptyState = page.locator('text=暂无数据');
+      // Use first() to avoid strict mode violation when both are present
+      const header = page.locator('header >> h1');
+      const emptyState = page.locator('h2:text("暂无数据")');
 
       // One of them should be visible
-      await expect(header.or(emptyState)).toBeVisible({ timeout: 5000 });
+      await expect(header.or(emptyState).first()).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -158,8 +159,8 @@ test.describe('Dashboard Page', () => {
         await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Click logout button - use text selector as it's more reliable
-      await page.locator('button:has-text("登出")').click();
+      // Click logout button - use aria-label selector as button only has icon
+      await page.locator('button[aria-label="登出"]').click();
 
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });

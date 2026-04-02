@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import {
@@ -23,6 +23,7 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [input, setInput] = useState('');
+  const hasInitializedRef = useRef(false);
 
   const {
     messages,
@@ -78,12 +79,25 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
     }
   }, [setMessages]);
 
-  // 打开时自动创建对话
+  // 打开时：有历史对话则不自动创建，只在没有对话时创建新对话
   useEffect(() => {
-    if (open && !conversationId) {
-      handleNewConversation();
+    if (open && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      // 先检查是否有历史对话
+      fetch('/api/conversations')
+        .then(res => res.json())
+        .then((data) => {
+          if (data.conversations?.length === 0) {
+            // 没有历史对话，自动创建
+            handleNewConversation();
+          }
+          // 有历史对话则不自动创建，显示列表让用户选择
+        })
+        .catch(() => {
+          // 出错时静默处理，不阻断用户
+        });
     }
-  }, [open, conversationId, handleNewConversation]);
+  }, [open, handleNewConversation]);
 
   const onSubmit = () => {
     if (!conversationId) {

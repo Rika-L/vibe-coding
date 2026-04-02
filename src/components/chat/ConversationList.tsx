@@ -83,6 +83,7 @@ export function ConversationList({ selectedId, onSelect, onNew, refreshTrigger }
       toast.error('删除对话失败');
     }
     finally {
+      setDeleteDialogOpen(false);
       setConversationToDelete(null);
     }
   };

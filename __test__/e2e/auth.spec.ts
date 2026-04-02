@@ -57,7 +57,7 @@ test.describe('Authentication Flow', () => {
       await page.locator('button').filter({ hasText: '注册' }).click();
 
       // Should show validation error
-      await expect(page.locator('text=密码至少 6 个字符')).toBeVisible();
+      await expect(page.locator('text=密码至少需要 6 个字符')).toBeVisible();
     });
 
     test('should navigate to login page', async ({ page }) => {
@@ -208,8 +208,8 @@ test.describe('Authentication Flow', () => {
         await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Click logout button - use text selector as it's more reliable
-      await page.locator('button:has-text("登出")').click();
+      // Click logout button - use aria-label selector as button only has icon
+      await page.locator('button[aria-label="登出"]').click();
 
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
@@ -235,8 +235,8 @@ test.describe('Authentication Flow', () => {
         await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Logout - use text selector as it's more reliable
-      await page.locator('button:has-text("登出")').click();
+      // Logout - use aria-label selector as button only has icon
+      await page.locator('button[aria-label="登出"]').click();
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
 
       // Try to access dashboard

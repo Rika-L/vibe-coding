@@ -17,7 +17,11 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
     const isDark = document.documentElement.classList.contains('dark');
     chartInstance.current = echarts.init(chartRef.current);
 
-    const color = score >= 80 ? '#22c55e' : score >= 60 ? '#3b82f6' : '#ef4444';
+    const color = score >= 80
+      ? '#10b981' // emerald green - excellent
+      : score >= 60
+        ? '#06b6d4' // cyan - good
+        : '#f43f5e'; // rose red - needs improvement
 
     const option: echarts.EChartsOption = {
       title: {

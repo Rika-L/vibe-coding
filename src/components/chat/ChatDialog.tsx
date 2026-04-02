@@ -141,7 +141,7 @@ export function ChatDialog({ open, onOpenChange }: ChatDialogProps) {
             refreshTrigger={refreshTrigger}
           />
           <div className="flex-1 flex flex-col">
-            <ChatMessages messages={messages} isLoading={isLoading} />
+            <ChatMessages messages={messages} status={status} />
             <ChatInput
               input={input}
               isLoading={isLoading}

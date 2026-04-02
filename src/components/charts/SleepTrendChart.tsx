@@ -21,8 +21,8 @@ export function SleepTrendChart({ data }: SleepTrendChartProps) {
     const isDark = document.documentElement.classList.contains('dark');
     chartInstance.current = echarts.init(chartRef.current);
 
-    const primaryColor = '#8b5cf6';
-    const secondaryColor = '#22c55e';
+    const primaryColor = '#0ea5e9';
+    const secondaryColor = '#06b6d4';
 
     const option: echarts.EChartsOption = {
       grid: {

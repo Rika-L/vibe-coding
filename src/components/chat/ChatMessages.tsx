@@ -8,10 +8,10 @@ import type { UIMessage } from 'ai';
 
 interface ChatMessagesProps {
   messages: UIMessage[];
-  isLoading: boolean;
+  status: 'streaming' | 'submitted' | 'ready' | 'error';
 }
 
-export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+export function ChatMessages({ messages, status }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // 自动滚动到底部
@@ -19,7 +19,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  if (messages.length === 0 && !isLoading) {
+  if (messages.length === 0 && status !== 'submitted') {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
         <div className="text-center">
@@ -74,7 +74,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
           </div>
         </div>
       ))}
-      {isLoading && (
+      {status === 'submitted' && (
         <div className="flex gap-3">
           <div className="shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
             <Bot className="h-4 w-4" />

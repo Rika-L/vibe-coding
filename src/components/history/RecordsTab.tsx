@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Moon, ChevronLeft, ChevronRight, Trash2, Pencil } from 'lucide-react';
+import { Clock, Moon, ChevronLeft, ChevronRight, Trash2, Pencil, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,7 @@ interface RecordsTabProps {
   onDeleteRecord: (record: SleepRecord) => void;
   onBatchDelete: () => void;
   onClearAll: () => void;
+  onAddRecord?: () => void;
 }
 
 export function RecordsTab({
@@ -41,9 +42,20 @@ export function RecordsTab({
   onDeleteRecord,
   onBatchDelete,
   onClearAll,
+  onAddRecord,
 }: RecordsTabProps) {
   return (
     <>
+      {/* Add Record Button */}
+      {onAddRecord && (
+        <div className="mb-4">
+          <Button onClick={onAddRecord} className="gap-2">
+            <Plus className="h-4 w-4" />
+            添加记录
+          </Button>
+        </div>
+      )}
+
       {records.length > 0 && (
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-muted-foreground">

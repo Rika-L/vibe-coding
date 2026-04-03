@@ -35,8 +35,8 @@ let testToken: string;
 // Mock cookie store
 const mockCookieStore = {
   set: vi.fn(),
-  get: vi.fn(() => {
-    if (testToken) {
+  get: vi.fn((name: string) => {
+    if (name === 'auth-token' && testToken) {
       return { value: testToken };
     }
     return { value: null };
@@ -55,9 +55,18 @@ const { GET: getSleepHistoryHandler } = await import('@/app/api/sleep-history/ro
 
 describe('Sleep Data API', () => {
   beforeAll(async () => {
-    // Create test user
-    testUserId = crypto.randomUUID();
-    testToken = await generateTestToken(testUserId, 'test@example.com');
+    // Create test user first
+    const { hashPassword } = await import('@/lib/auth');
+    const hashedPassword = await hashPassword('password123');
+    const user = await testPrisma.user.create({
+      data: {
+        email: 'sleep-data-test@test.com',
+        password: hashedPassword,
+        name: 'Sleep Data Test User',
+      },
+    });
+    testUserId = user.id;
+    testToken = await generateTestToken(user.id, user.email);
 
     // Create test sleep records
     await testPrisma.sleepRecord.createMany({
@@ -103,10 +112,7 @@ describe('Sleep Data API', () => {
   });
 
   afterEach(async () => {
-    // Clean up test data after each test
-    await testPrisma.sleepRecord.deleteMany({
-      where: { userId: testUserId },
-    });
+    vi.clearAllMocks();
   });
 
   describe('GET /api/sleep-data', () => {
@@ -142,9 +148,12 @@ describe('Sleep Data API', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
+      const originalToken = testToken;
       testToken = '';
+      mockCookieStore.get.mockReturnValueOnce({ value: null });
       const request = new NextRequest('http://localhost/api/sleep-data');
       const response = await getSleepDataHandler(request);
+      testToken = originalToken;
 
       expect(response.status).toBe(401);
     });
@@ -162,9 +171,12 @@ describe('Sleep Data API', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
+      const originalToken = testToken;
       testToken = '';
+      mockCookieStore.get.mockReturnValueOnce({ value: null });
       const request = new NextRequest('http://localhost/api/sleep-dates');
       const response = await getSleepDatesHandler(request);
+      testToken = originalToken;
 
       expect(response.status).toBe(401);
     });
@@ -191,9 +203,12 @@ describe('Sleep Data API', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
+      const originalToken = testToken;
       testToken = '';
+      mockCookieStore.get.mockReturnValueOnce({ value: null });
       const request = new NextRequest('http://localhost/api/sleep-history');
       const response = await getSleepHistoryHandler(request);
+      testToken = originalToken;
 
       expect(response.status).toBe(401);
     });

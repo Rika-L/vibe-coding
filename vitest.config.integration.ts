@@ -20,5 +20,7 @@ export default defineConfig({
     hookTimeout: 10000,
     // Run with isolation to avoid conflicts
     isolate: true,
+    // Run test files sequentially to avoid database conflicts
+    fileParallelism: false,
   },
 })

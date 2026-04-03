@@ -22,20 +22,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { sleepRecordSchema, type SleepRecordInput } from '@/lib/validations/auth';
-
-interface SleepRecord {
-  id?: string;
-  date: string;
-  sleepDuration: number;
-  bedTime?: string;
-  wakeTime?: string;
-  deepSleep?: number | null;
-  lightSleep?: number | null;
-  remSleep?: number | null;
-  awakeCount?: number | null;
-  sleepScore?: number | null;
-  heartRate?: number | null;
-}
+import type { SleepRecord, SleepRecordFormData } from '@/lib/types';
 
 interface SleepRecordDialogProps {
   open: boolean;
@@ -53,7 +40,7 @@ export function SleepRecordDialog({
   const isEdit = !!record?.id;
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<SleepRecord>({
+  const [formData, setFormData] = useState<SleepRecordFormData>({
     date: format(new Date(), 'yyyy-MM-dd'),
     sleepDuration: 7,
     bedTime: '23:00',
@@ -135,7 +122,7 @@ export function SleepRecordDialog({
     }
   };
 
-  const updateField = (field: keyof SleepRecord, value: unknown) => {
+  const updateField = (field: keyof SleepRecordFormData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

@@ -1,6 +1,6 @@
 // vitest.config.ts
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 // Unit test config - run with: npm run test:run
 // Integration tests have their own config (vitest.config.integration.ts)
@@ -27,8 +27,8 @@ export default defineConfig({
         lines: 60,
         functions: 65,
         branches: 35,
-        statements: 60
-      }
+        statements: 60,
+      },
     },
   },
-})
+});

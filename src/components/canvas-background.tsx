@@ -114,7 +114,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     meteor: Meteor | null,
     width: number,
     height: number,
-    isDark: boolean
+    isDark: boolean,
   ) => {
     if (!meteor || !meteor.active) return;
 
@@ -195,7 +195,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     ctx: CanvasRenderingContext2D,
     stars: Star[],
     time: number,
-    isDark: boolean
+    isDark: boolean,
   ) => {
     const colors = isDark ? COLORS.dark : COLORS.light;
 
@@ -213,7 +213,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
       if (star.layer === 'near' && star.size > 2) {
         const gradient = ctx.createRadialGradient(
           star.x, star.y, 0,
-          star.x, star.y, star.size * 3
+          star.x, star.y, star.size * 3,
         );
         gradient.addColorStop(0, color.replace(/[\d.]+\)$/, `${currentOpacity * 0.3})`));
         gradient.addColorStop(1, 'transparent');
@@ -232,7 +232,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     time: number,
     width: number,
     height: number,
-    isDark: boolean
+    isDark: boolean,
   ) => {
     nebulas.forEach((nebula) => {
       // 缓慢漂移
@@ -252,7 +252,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
 
       const gradient = ctx.createRadialGradient(
         nebula.x, nebula.y, 0,
-        nebula.x, nebula.y, currentRadius
+        nebula.x, nebula.y, currentRadius,
       );
 
       const color = isDark ? COLORS.dark.nebula : COLORS.light.nebula;
@@ -272,7 +272,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     width: number,
     height: number,
     time: number,
-    isDark: boolean
+    isDark: boolean,
   ) => {
     // 月亮位置：右上象限
     const moonX = width * 0.8;
@@ -295,7 +295,7 @@ export function CanvasBackground({ className }: CanvasBackgroundProps) {
     layers.forEach((layer) => {
       const gradient = ctx.createRadialGradient(
         moonX, moonY, 0,
-        moonX, moonY, layer.radius
+        moonX, moonY, layer.radius,
       );
       gradient.addColorStop(0, color.replace(/[\d.]+\)$/, `${layer.opacity})`));
       gradient.addColorStop(1, 'transparent');

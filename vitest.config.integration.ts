@@ -1,6 +1,6 @@
 // vitest.config.integration.ts
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 // Integration test config - run with: npx vitest run -c vitest.config.integration.ts
 // This runs in isolation from unit tests to avoid PrismaClient caching issues
@@ -23,4 +23,4 @@ export default defineConfig({
     // Run test files sequentially to avoid database conflicts
     fileParallelism: false,
   },
-})
+});

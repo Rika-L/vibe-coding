@@ -1,7 +1,7 @@
 // vitest.config.components.ts
 // Component tests that need jsdom environment
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   resolve: {
@@ -18,4 +18,4 @@ export default defineConfig({
     testTimeout: 15000,
     hookTimeout: 10000,
   },
-})
+});

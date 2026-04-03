@@ -20,7 +20,7 @@ vi.mock('echarts', () => {
       public y: number,
       public x2: number,
       public y2: number,
-      public stops: Array<{ offset: number; color: string }>
+      public stops: Array<{ offset: number; color: string }>,
     ) {}
   }
 

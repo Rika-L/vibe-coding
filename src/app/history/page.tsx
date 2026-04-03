@@ -5,39 +5,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
   Moon,
   Loader2,
   LogOut,
   AlertCircle,
-  Search,
-  X,
   Sparkles,
-  Trash2,
-  Star,
-  Pencil,
   User as UserIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SleepRecordDialog } from '@/components/sleep-record-dialog';
-import { cn } from '@/lib/utils';
+import { SleepRecord } from '@/lib/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,22 +24,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  HistoryFilters,
+  RecordsTab,
+  ReportsTab,
+  DeleteReportDialog,
+  DeleteRecordDialog,
+  BatchDeleteDialog,
+  ClearAllDialog,
+} from '@/components/history';
 
 type TabType = 'records' | 'reports';
-
-interface SleepRecord {
-  id: string;
-  date: string;
-  sleepDuration: number;
-  deepSleep: number | null;
-  lightSleep: number | null;
-  remSleep: number | null;
-  sleepScore: number | null;
-  bedTime?: string;
-  wakeTime?: string;
-  awakeCount?: number | null;
-  heartRate?: number | null;
-}
 
 interface AnalysisReport {
   id: string;
@@ -87,14 +61,10 @@ export default function HistoryPage() {
   const [filtering, setFiltering] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
+    page: 1, pageSize: 20, total: 0, totalPages: 0,
   });
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
@@ -115,963 +85,249 @@ export default function HistoryPage() {
         page: pagination.page.toString(),
         pageSize: pagination.pageSize.toString(),
       });
-
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
-
       const res = await fetch(`/api/sleep-history?${params}`);
-
       if (!res.ok) {
-        if (res.status === 401) {
-          router.push('/login?redirect=/history');
-          return;
-        }
+        if (res.status === 401) { router.push('/login?redirect=/history'); return; }
         throw new Error('网络请求失败');
       }
-
       const data = await res.json();
       setRecords(data.records || []);
-      setPagination(prev => ({
-        ...prev,
-        total: data.pagination.total,
-        totalPages: data.pagination.totalPages,
-      }));
+      setPagination(prev => ({ ...prev, total: data.pagination.total, totalPages: data.pagination.totalPages }));
     }
-    catch (error) {
-      console.error('Failed to fetch data:', error);
-      setLoadError(true);
-    }
-    finally {
-      setLoading(false);
-      setFiltering(false);
-    }
+    catch { setLoadError(true); }
+    finally { setLoading(false); setFiltering(false); }
   }, [pagination.page, pagination.pageSize, startDate, endDate, router]);
 
   const fetchReports = useCallback(async () => {
     try {
       setLoadError(false);
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        pageSize: '10',
-      });
-
-      const res = await fetch(`/api/reports?${params}`);
-
+      const res = await fetch(`/api/reports?page=${pagination.page}&pageSize=10`);
       if (!res.ok) {
-        if (res.status === 401) {
-          router.push('/login?redirect=/history');
-          return;
-        }
+        if (res.status === 401) { router.push('/login?redirect=/history'); return; }
         throw new Error('网络请求失败');
       }
-
       const data = await res.json();
       setReports(data.reports || []);
-      setPagination(prev => ({
-        ...prev,
-        total: data.pagination.total,
-        totalPages: data.pagination.totalPages,
-      }));
+      setPagination(prev => ({ ...prev, total: data.pagination.total, totalPages: data.pagination.totalPages }));
     }
-    catch (error) {
-      console.error('Failed to fetch reports:', error);
-      setLoadError(true);
-    }
-    finally {
-      setLoading(false);
-    }
+    catch { setLoadError(true); }
+    finally { setLoading(false); }
   }, [pagination.page, router]);
 
   useEffect(() => {
     setLoading(true);
-    if (activeTab === 'records') {
-      fetchData();
-    }
-    else {
-      fetchReports();
-    }
+    activeTab === 'records' ? fetchData() : fetchReports();
   }, [activeTab, fetchData, fetchReports]);
 
-  // 获取用户信息
   useEffect(() => {
-    fetch('/api/user/profile')
-      .then(res => res.ok ? res.json() : null)
-      .then((data) => {
-        if (data?.user) {
-          setUserInfo(data.user);
-        }
-      })
-      .catch(() => {});
+    fetch('/api/user/profile').then(res => res.ok ? res.json() : null).then(d => d?.user && setUserInfo(d.user)).catch(() => {});
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      toast.success('已登出');
-      router.push('/login');
-    }
-    catch {
-      toast.error('登出失败');
-    }
+    try { await fetch('/api/auth/logout', { method: 'POST' }); toast.success('已登出'); router.push('/login'); }
+    catch { toast.error('登出失败'); }
   };
 
-  const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
-  };
-
-  const handleFilter = () => {
-    setPagination(prev => ({ ...prev, page: 1 }));
-    setFiltering(true);
-    setLoading(true);
-  };
-
-  const clearFilter = () => {
-    setStartDate('');
-    setEndDate('');
-    setPagination(prev => ({ ...prev, page: 1 }));
-    setFiltering(true);
-    setLoading(true);
-    // 主动触发数据获取，确保 loading 状态能被正确重置
-    fetchData();
-  };
-
-  const handleDeleteReport = async (reportId: string) => {
-    setReportToDelete(reportId);
-    setDeleteDialogOpen(true);
-  };
+  const handlePageChange = (newPage: number) => setPagination(prev => ({ ...prev, page: newPage }));
+  const handleFilter = () => { setPagination(prev => ({ ...prev, page: 1 })); setFiltering(true); setLoading(true); };
+  const clearFilter = () => { setStartDate(''); setEndDate(''); setPagination(prev => ({ ...prev, page: 1 })); setFiltering(true); setLoading(true); fetchData(); };
 
   const confirmDeleteReport = async () => {
     if (!reportToDelete) return;
-
     setDeletingId(reportToDelete);
     try {
-      const res = await fetch(`/api/reports/${reportToDelete}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || '删除失败');
-      }
-
-      toast.success('报告已删除');
-      fetchReports();
+      const res = await fetch(`/api/reports/${reportToDelete}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error || '删除失败');
+      toast.success('报告已删除'); fetchReports();
     }
-    catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
-    }
-    finally {
-      setDeletingId(null);
-      setReportToDelete(null);
-    }
+    catch (e) { toast.error(e instanceof Error ? e.message : '删除失败'); }
+    finally { setDeletingId(null); setReportToDelete(null); }
   };
 
   const handleEditRecord = (record: SleepRecord) => {
-    setSelectedRecord({
-      ...record,
-      bedTime: record.bedTime ? new Date(record.bedTime).toTimeString().slice(0, 5) : undefined,
-      wakeTime: record.wakeTime ? new Date(record.wakeTime).toTimeString().slice(0, 5) : undefined,
-    });
+    setSelectedRecord({ ...record, bedTime: record.bedTime ? new Date(record.bedTime).toTimeString().slice(0, 5) : undefined, wakeTime: record.wakeTime ? new Date(record.wakeTime).toTimeString().slice(0, 5) : undefined });
     setEditDialogOpen(true);
   };
 
-  const handleDeleteRecord = (record: SleepRecord) => {
-    setSelectedRecord(record);
-    setDeleteRecordDialogOpen(true);
-  };
-
   const handleSelectOne = (id: string) => {
-    setSelectedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      }
-      else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
+    setSelectedIds((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   };
 
   const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedIds(new Set());
-      setSelectAll(false);
-    }
-    else {
-      setSelectedIds(new Set(records.map(r => r.id)));
-      setSelectAll(true);
-    }
+    if (selectAll) { setSelectedIds(new Set()); setSelectAll(false); }
+    else { setSelectedIds(new Set(records.map(r => r.id))); setSelectAll(true); }
   };
 
   const handleBatchDelete = async () => {
     if (selectedIds.size === 0) return;
-
     setDeletingId('batch');
     try {
-      const res = await fetch('/api/sleep-records', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: Array.from(selectedIds) }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || '删除失败');
-      }
-
+      const res = await fetch('/api/sleep-records', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: Array.from(selectedIds) }) });
+      if (!res.ok) throw new Error((await res.json()).error || '删除失败');
       toast.success(`已删除 ${selectedIds.size} 条记录`);
-      setSelectedIds(new Set());
-      setSelectAll(false);
-      setBatchDeleteDialogOpen(false);
-      fetchData();
+      setSelectedIds(new Set()); setSelectAll(false); setBatchDeleteDialogOpen(false); fetchData();
     }
-    catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
-    }
-    finally {
-      setDeletingId(null);
-    }
+    catch (e) { toast.error(e instanceof Error ? e.message : '删除失败'); }
+    finally { setDeletingId(null); }
   };
 
   const handleClearAll = async () => {
     if (confirmText !== '确认清空') return;
-
     setDeletingId('clear');
     try {
-      const res = await fetch('/api/sleep-records?all=true', {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || '清空失败');
-      }
-
+      const res = await fetch('/api/sleep-records?all=true', { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error || '清空失败');
       toast.success('已清空所有记录');
-      setSelectedIds(new Set());
-      setSelectAll(false);
-      setClearAllDialogOpen(false);
-      setConfirmText('');
-      fetchData();
+      setSelectedIds(new Set()); setSelectAll(false); setClearAllDialogOpen(false); setConfirmText(''); fetchData();
     }
-    catch (error) {
-      toast.error(error instanceof Error ? error.message : '清空失败');
-    }
-    finally {
-      setDeletingId(null);
-    }
+    catch (e) { toast.error(e instanceof Error ? e.message : '清空失败'); }
+    finally { setDeletingId(null); }
   };
 
   const confirmDeleteRecord = async () => {
     if (!selectedRecord) return;
-
     setDeletingId(selectedRecord.id);
     try {
-      const res = await fetch(`/api/sleep-records/${selectedRecord.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || '删除失败');
-      }
-
-      toast.success('记录已删除');
-      setDeleteRecordDialogOpen(false);
-      fetchData();
+      const res = await fetch(`/api/sleep-records/${selectedRecord.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error || '删除失败');
+      toast.success('记录已删除'); setDeleteRecordDialogOpen(false); fetchData();
     }
-    catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
-    }
-    finally {
-      setDeletingId(null);
-      setSelectedRecord(null);
-    }
+    catch (e) { toast.error(e instanceof Error ? e.message : '删除失败'); }
+    finally { setDeletingId(null); setSelectedRecord(null); }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
-        <div className="text-center">
-          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive/50" />
-          <h2 className="mb-2 text-2xl font-semibold text-foreground">
-            加载失败
-          </h2>
-          <p className="text-muted-foreground">网络错误，请稍后重试</p>
-        </div>
-        <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => (activeTab === 'records' ? fetchData() : fetchReports())}
-          >
-            重新加载
-          </Button>
-          <Link href="/dashboard">
-            <Button>返回看板</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
+  if (loadError) return <ErrorState onRetry={() => (activeTab === 'records' ? fetchData() : fetchReports())} />;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            返回
-          </Link>
-
-          <h1 className="text-lg font-semibold text-foreground">历史数据</h1>
-
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <DropdownMenu>
-              <DropdownMenuTrigger className="outline-none">
-                <span className="text-lg cursor-pointer">{userInfo?.avatar || '👤'}</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => router.push('/settings')} className="flex items-center gap-2">
-                  <UserIcon className="h-4 w-4" />
-                  用户设置
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
-                  <LogOut className="h-4 w-4" />
-                  退出登录
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+      <Header userInfo={userInfo} onLogout={handleLogout} router={router} />
       <main className="container mx-auto px-4 py-8">
-        {/* Tab Switcher */}
-        <div className="mb-6 flex gap-2">
-          <Button
-            variant={activeTab === 'records' ? 'default' : 'outline'}
-            onClick={() => {
-              setActiveTab('records');
-              setPagination(prev => ({ ...prev, page: 1 }));
-            }}
-            className="gap-2"
-          >
-            <Moon className="h-4 w-4" />
-            睡眠记录
-          </Button>
-          <Button
-            variant={activeTab === 'reports' ? 'default' : 'outline'}
-            onClick={() => {
-              setActiveTab('reports');
-              setPagination(prev => ({ ...prev, page: 1 }));
-            }}
-            className="gap-2"
-          >
-            <Sparkles className="h-4 w-4" />
-            AI 分析报告
-          </Button>
-        </div>
-
+        <TabSwitcher activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); setPagination(prev => ({ ...prev, page: 1 })); }} />
         {activeTab === 'records' ? (
           <>
-            {/* Filter Section */}
-            <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium">筛选条件</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap items-end gap-4">
-                  <div className="flex-1 min-w-[150px]">
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      开始日期
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        type="date"
-                        value={startDate}
-                        onChange={e => setStartDate(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-[150px]">
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      结束日期
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        type="date"
-                        value={endDate}
-                        onChange={e => setEndDate(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <Button onClick={handleFilter} disabled={filtering} className="gap-2">
-                    {filtering
-                      ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            筛选中...
-                          </>
-                        )
-                      : (
-                          <>
-                            <Search className="h-4 w-4" />
-                            筛选
-                          </>
-                        )}
-                  </Button>
-                  <Button variant="outline" onClick={clearFilter} className="gap-2">
-                    <X className="h-4 w-4" />
-                    清除
-                  </Button>
-                  {pagination.total > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      找到
-                      {' '}
-                      {pagination.total}
-                      {' '}
-                      条记录
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {records.length > 0 && (
-              <div className="mb-4 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  已选择
-                  {' '}
-                  <span className="font-medium text-foreground">{selectedIds.size}</span>
-                  {' '}
-                  条记录
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setBatchDeleteDialogOpen(true)}
-                    disabled={selectedIds.size === 0 || !!deletingId}
-                    className="gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    批量删除
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setClearAllDialogOpen(true)}
-                    disabled={pagination.total === 0 || !!deletingId}
-                    className="gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    清空全部
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Data Table */}
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium">
-                  睡眠记录 (
-                  {pagination.total}
-                  {' '}
-                  条)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {records.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <Moon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                    <p className="text-muted-foreground">暂无数据</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border">
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-10">
-                              <input
-                                type="checkbox"
-                                checked={selectAll}
-                                onChange={handleSelectAll}
-                                className="h-4 w-4 rounded border-border"
-                              />
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              日期
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              睡眠时长
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              深睡
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              浅睡
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              REM
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              评分
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                              操作
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {records.map(record => (
-                            <tr
-                              key={record.id}
-                              onClick={() => setSelectedId(record.id === selectedId ? null : record.id)}
-                              className={cn(
-                                'cursor-pointer border-b border-border/50 transition-all duration-200 hover:bg-muted',
-                                record.id === selectedId
-                                  ? 'bg-primary/10 border-l-2 border-l-primary'
-                                  : 'hover:bg-muted/50',
-                              )}
-                            >
-                              <td className="px-4 py-3 w-10">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedIds.has(record.id)}
-                                  onChange={() => handleSelectOne(record.id)}
-                                  onClick={e => e.stopPropagation()}
-                                  className="h-4 w-4 rounded border-border"
-                                />
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {new Date(record.date).toLocaleDateString('zh-CN')}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3 text-muted-foreground" />
-                                  {record.sleepDuration.toFixed(1)}
-                                  h
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {record.deepSleep ? `${record.deepSleep.toFixed(1)}h` : '-'}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {record.lightSleep ? `${record.lightSleep.toFixed(1)}h` : '-'}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {record.remSleep ? `${record.remSleep.toFixed(1)}h` : '-'}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {record.sleepScore
-                                  ? (
-                                      <span
-                                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                          record.sleepScore >= 80
-                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                            : record.sleepScore >= 60
-                                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                        }`}
-                                      >
-                                        {record.sleepScore}
-                                      </span>
-                                    )
-                                  : (
-                                      '-'
-                                    )}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditRecord(record);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteRecord(record);
-                                    }}
-                                    className="text-muted-foreground hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        第
-                        {' '}
-                        {pagination.page}
-                        {' '}
-                        /
-                        {' '}
-                        {pagination.totalPages}
-                        {' '}
-                        页
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pagination.page <= 1}
-                          onClick={() => handlePageChange(pagination.page - 1)}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pagination.page >= pagination.totalPages}
-                          onClick={() => handlePageChange(pagination.page + 1)}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+            <HistoryFilters
+              startDate={startDate}
+              endDate={endDate}
+              filtering={filtering}
+              totalRecords={pagination.total}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onFilter={handleFilter}
+              onClear={clearFilter}
+            />
+            <RecordsTab
+              records={records}
+              pagination={pagination}
+              selectedIds={selectedIds}
+              selectAll={selectAll}
+              deletingId={deletingId}
+              onSelectOne={handleSelectOne}
+              onSelectAll={handleSelectAll}
+              onPageChange={handlePageChange}
+              onEditRecord={handleEditRecord}
+              onDeleteRecord={(r) => { setSelectedRecord(r); setDeleteRecordDialogOpen(true); }}
+              onBatchDelete={() => setBatchDeleteDialogOpen(true)}
+              onClearAll={() => setClearAllDialogOpen(true)}
+            />
           </>
         ) : (
-          /* Reports Tab */
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">
-                AI 分析报告 (
-                {pagination.total}
-                {' '}
-                份)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {reports.length === 0 ? (
-                <div className="py-12 text-center">
-                  <Sparkles className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                  <p className="mb-4 text-muted-foreground">暂无分析报告</p>
-                  <Link href="/dashboard">
-                    <Button size="sm">生成第一份报告</Button>
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-4">
-                    {reports.map((report) => {
-                      const qualityConfig: Record<string, { color: string; bg: string }> = {
-                        优秀: { color: 'text-green-500', bg: 'bg-green-500/10' },
-                        良好: { color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                        一般: { color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-                        较差: { color: 'text-red-500', bg: 'bg-red-500/10' },
-                      };
-                      const qualityStyle = qualityConfig[report.sleepQuality] || qualityConfig['良好'];
-
-                      return (
-                        <div
-                          key={report.id}
-                          className="group flex items-start justify-between gap-4 rounded-lg border border-border/50 p-4 transition-all hover:border-primary/30 hover:bg-muted/30"
-                        >
-                          <Link
-                            href={`/report/${report.id}`}
-                            className="flex-1 min-w-0"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={cn('rounded-lg p-2', qualityStyle.bg)}>
-                                <Star className={cn('h-5 w-5', qualityStyle.color)} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-foreground truncate">
-                                  {report.title}
-                                </h3>
-                                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                                  {report.summary}
-                                </p>
-                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {new Date(report.createdAt).toLocaleDateString('zh-CN')}
-                                  </span>
-                                  <span className={cn('rounded-full px-2 py-0.5', qualityStyle.bg, qualityStyle.color)}>
-                                    {report.sleepQuality}
-                                  </span>
-                                  <span>{report.dataRange}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                            onClick={() => handleDeleteReport(report.id)}
-                            disabled={deletingId === report.id}
-                          >
-                            {deletingId === report.id
-                              ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                )
-                              : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Pagination */}
-                  {pagination.totalPages > 1 && (
-                    <div className="mt-6 flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        第
-                        {' '}
-                        {pagination.page}
-                        {' '}
-                        /
-                        {' '}
-                        {pagination.totalPages}
-                        {' '}
-                        页
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pagination.page <= 1}
-                          onClick={() => handlePageChange(pagination.page - 1)}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pagination.page >= pagination.totalPages}
-                          onClick={() => handlePageChange(pagination.page + 1)}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <ReportsTab
+            reports={reports}
+            pagination={pagination}
+            deletingId={deletingId}
+            onDeleteReport={(id) => { setReportToDelete(id); setDeleteDialogOpen(true); }}
+            onPageChange={handlePageChange}
+          />
         )}
       </main>
+      <DeleteReportDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} reportId={reportToDelete} deletingId={deletingId} onConfirm={confirmDeleteReport} />
+      <SleepRecordDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} record={selectedRecord} onSuccess={fetchData} />
+      <DeleteRecordDialog open={deleteRecordDialogOpen} onOpenChange={setDeleteRecordDialogOpen} recordId={selectedRecord?.id ?? null} deletingId={deletingId} onConfirm={confirmDeleteRecord} />
+      <BatchDeleteDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen} selectedCount={selectedIds.size} deletingId={deletingId} onConfirm={handleBatchDelete} />
+      <ClearAllDialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen} totalCount={pagination.total} confirmText={confirmText} deletingId={deletingId} onConfirmTextChange={setConfirmText} onConfirm={handleClearAll} />
+    </div>
+  );
+}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center pt-6 pb-2">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-              <Trash2 className="h-7 w-7 text-destructive" />
-            </div>
-            <AlertDialogHeader className="items-center text-center">
-              <AlertDialogTitle className="text-xl">确认删除报告？</AlertDialogTitle>
-              <AlertDialogDescription className="text-center">
-                删除后将无法恢复，该报告的所有数据将被永久移除。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </div>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
-            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteReport}
-              disabled={deletingId === reportToDelete}
-              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
-            >
-              {deletingId === reportToDelete
-                ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      删除中...
-                    </>
-                  )
-                : (
-                    '确认删除'
-                  )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+function LoadingState() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    </div>
+  );
+}
 
-      {/* Edit Record Dialog */}
-      <SleepRecordDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        record={selectedRecord}
-        onSuccess={fetchData}
-      />
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background">
+      <div className="text-center">
+        <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive/50" />
+        <h2 className="mb-2 text-2xl font-semibold text-foreground">加载失败</h2>
+        <p className="text-muted-foreground">网络错误，请稍后重试</p>
+      </div>
+      <div className="flex gap-4">
+        <Button variant="outline" onClick={onRetry}>重新加载</Button>
+        <Link href="/dashboard"><Button>返回看板</Button></Link>
+      </div>
+    </div>
+  );
+}
 
-      {/* Delete Record Confirmation Dialog */}
-      <AlertDialog open={deleteRecordDialogOpen} onOpenChange={setDeleteRecordDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center pt-6 pb-2">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-              <Trash2 className="h-7 w-7 text-destructive" />
-            </div>
-            <AlertDialogHeader className="items-center text-center">
-              <AlertDialogTitle className="text-xl">确认删除记录？</AlertDialogTitle>
-              <AlertDialogDescription className="text-center">
-                确定要删除这条睡眠记录吗？此操作无法撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </div>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
-            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteRecord}
-              disabled={deletingId === selectedRecord?.id}
-              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
-            >
-              {deletingId === selectedRecord?.id
-                ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      删除中...
-                    </>
-                  )
-                : (
-                    '确认删除'
-                  )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Batch Delete Confirmation Dialog */}
-      <AlertDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center pt-6 pb-2">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-              <Trash2 className="h-7 w-7 text-destructive" />
-            </div>
-            <AlertDialogHeader className="items-center text-center">
-              <AlertDialogTitle className="text-xl">确认删除选中的记录？</AlertDialogTitle>
-              <AlertDialogDescription className="text-center">
-                即将删除
+function Header({ userInfo, onLogout, router }: { userInfo: { name: string | null; avatar: string | null } | null; onLogout: () => void; router: { push: (s: string) => void } }) {
+  return (
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+      <div className="container mx-auto flex items-center justify-between px-4 py-4">
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" />
+          {' '}
+          返回
+        </Link>
+        <h1 className="text-lg font-semibold text-foreground">历史数据</h1>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <DropdownMenu>
+            <DropdownMenuTrigger className="outline-none">
+              <span className="text-lg cursor-pointer">{userInfo?.avatar || '👤'}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => router.push('/settings')} className="flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
                 {' '}
-                <span className="font-medium text-destructive">{selectedIds.size}</span>
+                用户设置
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onLogout} className="flex items-center gap-2 text-destructive">
+                <LogOut className="h-4 w-4" />
                 {' '}
-                条睡眠记录，此操作无法撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </div>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
-            <AlertDialogCancel className="w-full sm:w-auto">取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBatchDelete}
-              disabled={deletingId === 'batch'}
-              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
-            >
-              {deletingId === 'batch'
-                ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      删除中...
-                    </>
-                  )
-                : (
-                    '确认删除'
-                  )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                退出登录
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </header>
+  );
+}
 
-      {/* Clear All Confirmation Dialog */}
-      <AlertDialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
-          <div className="flex flex-col items-center pt-6 pb-2">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-              <Trash2 className="h-7 w-7 text-destructive" />
-            </div>
-            <AlertDialogHeader className="items-center text-center">
-              <AlertDialogTitle className="text-xl text-destructive">确认清空所有记录？</AlertDialogTitle>
-              <AlertDialogDescription className="text-center">
-                此操作将删除所有
-                {' '}
-                <span className="font-medium text-destructive">{pagination.total}</span>
-                {' '}
-                条睡眠记录，且无法恢复！
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </div>
-          <div className="px-6 pb-4">
-            <Input
-              value={confirmText}
-              onChange={e => setConfirmText(e.target.value)}
-              placeholder='请输入"确认清空"'
-              className="text-center"
-            />
-          </div>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
-            <AlertDialogCancel
-              className="w-full sm:w-auto"
-              onClick={() => setConfirmText('')}
-            >
-              取消
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleClearAll}
-              disabled={confirmText !== '确认清空' || deletingId === 'clear'}
-              className="w-full bg-destructive text-white hover:bg-destructive/90 sm:w-auto"
-            >
-              {deletingId === 'clear'
-                ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      清空中...
-                    </>
-                  )
-                : (
-                    '确认清空'
-                  )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+function TabSwitcher({ activeTab, setActiveTab }: { activeTab: TabType; setActiveTab: (t: TabType) => void }) {
+  return (
+    <div className="mb-6 flex gap-2">
+      <Button variant={activeTab === 'records' ? 'default' : 'outline'} onClick={() => setActiveTab('records')} className="gap-2">
+        <Moon className="h-4 w-4" />
+        {' '}
+        睡眠记录
+      </Button>
+      <Button variant={activeTab === 'reports' ? 'default' : 'outline'} onClick={() => setActiveTab('reports')} className="gap-2">
+        <Sparkles className="h-4 w-4" />
+        {' '}
+        AI 分析报告
+      </Button>
     </div>
   );
 }

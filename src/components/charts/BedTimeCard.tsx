@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Moon } from 'lucide-react';
+import { useECharts } from '@/hooks';
 
 interface BedTimeCardProps {
   data: {
@@ -12,9 +12,6 @@ interface BedTimeCardProps {
 }
 
 export function BedTimeCard({ data }: BedTimeCardProps) {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartInstance = useRef<echarts.ECharts | null>(null);
-
   // Calculate average bedtime
   const avgBedTime = data.length > 0
     ? data.reduce((sum, d) => {
@@ -28,75 +25,54 @@ export function BedTimeCard({ data }: BedTimeCardProps) {
   const avgMinutes = Math.round((avgBedTime - avgHours) * 60);
   const timeString = `${avgHours.toString().padStart(2, '0')}:${avgMinutes.toString().padStart(2, '0')}`;
 
-  useEffect(() => {
-    if (!chartRef.current || data.length === 0) return;
+  // Convert to hours for chart
+  const hoursData = data.map((d) => {
+    const date = new Date(d.bedTime);
+    return date.getHours() + date.getMinutes() / 60;
+  });
 
-    chartInstance.current = echarts.init(chartRef.current);
-
-    // Convert to hours for chart
-    const hoursData = data.map((d) => {
-      const date = new Date(d.bedTime);
-      return date.getHours() + date.getMinutes() / 60;
-    });
-
-    const option: echarts.EChartsOption = {
-      grid: {
-        top: 5,
-        right: 5,
-        bottom: 5,
-        left: 5,
-      },
-      xAxis: {
-        type: 'category',
-        data: data.map(d => d.date),
-        show: false,
-      },
-      yAxis: {
-        type: 'value',
-        min: 18, // 6 PM
-        max: 30, // 6 AM next day (24+6)
-        show: false,
-      },
-      series: [
-        {
-          type: 'line',
-          data: hoursData.map(h => h < 12 ? h + 24 : h), // Early morning times add 24
-          smooth: true,
-          symbol: 'none',
-          lineStyle: {
-            width: 2,
-            color: '#6366f1',
-          },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(99, 102, 241, 0.3)' },
-              { offset: 1, color: 'rgba(99, 102, 241, 0.02)' },
-            ]),
-          },
+  const option: echarts.EChartsOption = {
+    grid: {
+      top: 5,
+      right: 5,
+      bottom: 5,
+      left: 5,
+    },
+    xAxis: {
+      type: 'category',
+      data: data.map(d => d.date),
+      show: false,
+    },
+    yAxis: {
+      type: 'value',
+      min: 18, // 6 PM
+      max: 30, // 6 AM next day (24+6)
+      show: false,
+    },
+    series: [
+      {
+        type: 'line',
+        data: hoursData.map(h => h < 12 ? h + 24 : h), // Early morning times add 24
+        smooth: true,
+        symbol: 'none',
+        lineStyle: {
+          width: 2,
+          color: '#6366f1',
         },
-      ],
-    };
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(99, 102, 241, 0.3)' },
+            { offset: 1, color: 'rgba(99, 102, 241, 0.02)' },
+          ]),
+        },
+      },
+    ],
+  };
 
-    chartInstance.current.setOption(option);
-
-    const handleResize = () => chartInstance.current?.resize();
-    window.addEventListener('resize', handleResize);
-
-    // Observer for theme changes
-    const observer = new MutationObserver(() => {
-      chartInstance.current?.resize();
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', handleResize);
-      chartInstance.current?.dispose();
-    };
-  }, [data]);
+  const chartRef = useECharts({
+    option,
+    deps: [data],
+  });
 
   return (
     <div className="flex flex-col h-full">

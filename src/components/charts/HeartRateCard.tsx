@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Heart } from 'lucide-react';
+import { useECharts } from '@/hooks';
 
 interface HeartRateCardProps {
   data: {
@@ -12,76 +12,52 @@ interface HeartRateCardProps {
 }
 
 export function HeartRateCard({ data }: HeartRateCardProps) {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartInstance = useRef<echarts.ECharts | null>(null);
-
   // Filter valid data and calculate average
   const validData = data.filter(d => d.heartRate !== null && d.heartRate !== undefined);
   const avgHeartRate = validData.length > 0
     ? Math.round(validData.reduce((sum, d) => sum + (d.heartRate || 0), 0) / validData.length)
     : 0;
 
-  useEffect(() => {
-    if (!chartRef.current || validData.length === 0) return;
-
-    chartInstance.current = echarts.init(chartRef.current);
-
-    const option: echarts.EChartsOption = {
-      grid: {
-        top: 5,
-        right: 5,
-        bottom: 5,
-        left: 5,
-      },
-      xAxis: {
-        type: 'category',
-        data: validData.map(d => d.date),
-        show: false,
-      },
-      yAxis: {
-        type: 'value',
-        show: false,
-      },
-      series: [
-        {
-          type: 'line',
-          data: validData.map(d => d.heartRate),
-          smooth: true,
-          symbol: 'none',
-          lineStyle: {
-            width: 2,
-            color: '#f43f5e',
-          },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(244, 63, 94, 0.3)' },
-              { offset: 1, color: 'rgba(244, 63, 94, 0.02)' },
-            ]),
-          },
+  const option: echarts.EChartsOption = {
+    grid: {
+      top: 5,
+      right: 5,
+      bottom: 5,
+      left: 5,
+    },
+    xAxis: {
+      type: 'category',
+      data: validData.map(d => d.date),
+      show: false,
+    },
+    yAxis: {
+      type: 'value',
+      show: false,
+    },
+    series: [
+      {
+        type: 'line',
+        data: validData.map(d => d.heartRate),
+        smooth: true,
+        symbol: 'none',
+        lineStyle: {
+          width: 2,
+          color: '#f43f5e',
         },
-      ],
-    };
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(244, 63, 94, 0.3)' },
+            { offset: 1, color: 'rgba(244, 63, 94, 0.02)' },
+          ]),
+        },
+      },
+    ],
+  };
 
-    chartInstance.current.setOption(option);
-
-    const handleResize = () => chartInstance.current?.resize();
-    window.addEventListener('resize', handleResize);
-
-    // Observer for theme changes
-    const observer = new MutationObserver(() => {
-      chartInstance.current?.resize();
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', handleResize);
-      chartInstance.current?.dispose();
-    };
-  }, [data]);
+  const chartRef = useECharts({
+    option,
+    deps: [data],
+  });
 
   return (
     <div className="flex flex-col h-full">

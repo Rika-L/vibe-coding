@@ -2,16 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateSleepAnalysis } from '@/lib/ai';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-
-interface SleepRecord {
-  date: Date;
-  sleepDuration: number;
-  deepSleep: number | null;
-  lightSleep: number | null;
-  remSleep: number | null;
-  sleepScore: number | null;
-  heartRate: number | null;
-}
+import type { SleepRecordAnalysis } from '@/lib/types';
 
 export async function POST(request: Request) {
   try {
@@ -66,7 +57,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const dataSummary = records.map((r: SleepRecord) => ({
+    const dataSummary = records.map((r: SleepRecordAnalysis) => ({
       date: r.date.toISOString().split('T')[0],
       duration: r.sleepDuration,
       deep: r.deepSleep,
@@ -77,11 +68,11 @@ export async function POST(request: Request) {
     }));
 
     const avgDuration
-      = records.reduce((sum: number, r: SleepRecord) => sum + r.sleepDuration, 0) / records.length;
+      = records.reduce((sum: number, r: SleepRecordAnalysis) => sum + r.sleepDuration, 0) / records.length;
 
-    const recordsWithScore = records.filter((r: SleepRecord) => r.sleepScore !== null);
+    const recordsWithScore = records.filter((r: SleepRecordAnalysis) => r.sleepScore !== null);
     const avgScore = recordsWithScore.length > 0
-      ? records.reduce((sum: number, r: SleepRecord) => sum + (r.sleepScore || 0), 0) / recordsWithScore.length
+      ? records.reduce((sum: number, r: SleepRecordAnalysis) => sum + (r.sleepScore || 0), 0) / recordsWithScore.length
       : 0;
 
     const prompt = `作为睡眠健康专家，请分析以下睡眠数据并生成报告：

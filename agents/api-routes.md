@@ -28,6 +28,7 @@
 | /api/chat | POST | AI 聊天 (SSE 流式) |
 | /api/conversations | GET/POST | 对话列表/创建 |
 | /api/conversations/[id] | GET/DELETE | 对话详情/删除 |
+| /api/conversations/[id]/title | PUT | 更新对话标题 |
 
 ## 报告
 
@@ -35,6 +36,13 @@
 |------|------|------|
 | /api/reports | GET | 报告列表 |
 | /api/reports/[id] | GET | 报告详情 |
+
+## 用户设置
+
+| 路由 | 方法 | 用途 |
+|------|------|------|
+| /api/user/profile | PUT | 更新资料 (名称、头像) |
+| /api/user/password | PUT | 修改密码 |
 
 ## 规范
 

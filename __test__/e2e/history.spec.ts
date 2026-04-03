@@ -116,9 +116,10 @@ test.describe('History Page', () => {
       await page.locator('button:has-text("添加记录")').click();
       await expect(page.locator('text=添加睡眠记录')).toBeVisible({ timeout: 5000 });
 
-      // Check for form fields
-      await expect(page.locator('label:has-text("日期")')).toBeVisible();
-      await expect(page.locator('label:has-text("睡眠时长")')).toBeVisible();
+      // Check for form fields within dialog (using role selector)
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toContainText('日期');
+      await expect(dialog).toContainText('睡眠时长');
     });
 
     test('should close dialog on cancel', async ({ page }) => {
@@ -192,21 +193,21 @@ test.describe('History Page', () => {
 
   test.describe('Error Handling', () => {
     test('should show error state on API failure', async ({ page }) => {
-      await login(page);
-
-      // Intercept API call and force error
-      await page.route('**/api/sleep-history', (route) => {
-        route.fulfill({
+      // Intercept API call and force error BEFORE navigating
+      await page.route('**/api/sleep-history**', async (route) => {
+        await route.fulfill({
           status: 500,
           body: JSON.stringify({ error: 'Internal Server Error' }),
         });
       });
 
-      // Reload page to trigger error
-      await page.reload();
+      await login(page);
+
+      // Navigate to history page to trigger error
+      await page.goto('/history');
 
       // Wait for error state
-      await expect(page.locator('text=加载失败')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('h2:has-text("加载失败")')).toBeVisible({ timeout: 10000 });
     });
   });
 });

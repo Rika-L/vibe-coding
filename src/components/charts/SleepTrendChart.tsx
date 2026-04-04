@@ -1,6 +1,7 @@
 'use client';
 
 import * as echarts from 'echarts';
+import { memo } from 'react';
 import { useECharts } from '@/hooks';
 
 interface SleepTrendChartProps {
@@ -11,7 +12,7 @@ interface SleepTrendChartProps {
   }[];
 }
 
-export function SleepTrendChart({ data }: SleepTrendChartProps) {
+export const SleepTrendChart = memo(function SleepTrendChart({ data }: SleepTrendChartProps) {
   const primaryColor = '#0ea5e9';
   const secondaryColor = '#06b6d4';
 
@@ -117,4 +118,4 @@ export function SleepTrendChart({ data }: SleepTrendChartProps) {
   });
 
   return <div ref={chartRef} style={{ width: '100%', height: '350px' }} />;
-}
+});

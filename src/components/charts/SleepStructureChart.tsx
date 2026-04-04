@@ -1,6 +1,7 @@
 'use client';
 
 import * as echarts from 'echarts';
+import { memo } from 'react';
 import { useECharts } from '@/hooks';
 
 interface SleepStructureChartProps {
@@ -11,7 +12,7 @@ interface SleepStructureChartProps {
   }[];
 }
 
-export function SleepStructureChart({ data }: SleepStructureChartProps) {
+export const SleepStructureChart = memo(function SleepStructureChart({ data }: SleepStructureChartProps) {
   const avgDeep = data.reduce((sum, d) => sum + (d.deep || 0), 0) / data.length;
   const avgLight = data.reduce((sum, d) => sum + (d.light || 0), 0) / data.length;
   const avgRem = data.reduce((sum, d) => sum + (d.rem || 0), 0) / data.length;
@@ -89,4 +90,4 @@ export function SleepStructureChart({ data }: SleepStructureChartProps) {
   });
 
   return <div ref={chartRef} style={{ width: '100%', height: '320px' }} />;
-}
+});

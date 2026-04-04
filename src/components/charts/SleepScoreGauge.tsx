@@ -1,13 +1,14 @@
 'use client';
 
 import * as echarts from 'echarts';
+import { memo } from 'react';
 import { useECharts } from '@/hooks';
 
 interface SleepScoreGaugeProps {
   score: number;
 }
 
-export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
+export const SleepScoreGauge = memo(function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
   const color = score >= 80
     ? '#10b981' // emerald green - excellent
     : score >= 60
@@ -95,4 +96,4 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
   });
 
   return <div ref={chartRef} style={{ width: '100%', height: '220px' }} />;
-}
+});

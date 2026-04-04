@@ -1,6 +1,7 @@
 'use client';
 
 import * as echarts from 'echarts';
+import { memo } from 'react';
 import { useECharts } from '@/hooks';
 
 interface SleepRegularityChartProps {
@@ -24,7 +25,7 @@ function formatTime(hour: number): string {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
-export function SleepRegularityChart({ data }: SleepRegularityChartProps) {
+export const SleepRegularityChart = memo(function SleepRegularityChart({ data }: SleepRegularityChartProps) {
   // Convert times to hours
   const scatterData = data.map((d) => {
     const bed = new Date(d.bedTime);
@@ -52,6 +53,7 @@ export function SleepRegularityChart({ data }: SleepRegularityChartProps) {
       top: 10,
       textStyle: {
         fontSize: 14,
+        color: '#71717a', // 默认颜色，适配浅色主题
       },
     },
     grid: {
@@ -156,4 +158,4 @@ export function SleepRegularityChart({ data }: SleepRegularityChartProps) {
   });
 
   return <div ref={chartRef} style={{ width: '100%', height: '350px' }} />;
-}
+});

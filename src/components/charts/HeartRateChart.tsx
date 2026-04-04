@@ -1,6 +1,7 @@
 'use client';
 
 import * as echarts from 'echarts';
+import { memo } from 'react';
 import { useECharts } from '@/hooks';
 
 interface HeartRateChartProps {
@@ -10,7 +11,7 @@ interface HeartRateChartProps {
   }[];
 }
 
-export function HeartRateChart({ data }: HeartRateChartProps) {
+export const HeartRateChart = memo(function HeartRateChart({ data }: HeartRateChartProps) {
   const validData = data.filter(d => d.heartRate !== null && d.heartRate !== undefined);
 
   const option: echarts.EChartsOption = {
@@ -88,4 +89,4 @@ export function HeartRateChart({ data }: HeartRateChartProps) {
   });
 
   return <div ref={chartRef} style={{ width: '100%', height: '300px' }} />;
-}
+});

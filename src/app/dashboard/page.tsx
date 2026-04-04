@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -168,8 +168,16 @@ export default function Dashboard() {
     }
   };
 
-  // Compute derived data
-  const { avgScore, chartData, structureData, bedTimeData, wakeTimeData, heartRateData, regularityData } = computeChartData(records);
+  // Compute derived data with memoization
+  const {
+    avgScore,
+    chartData,
+    structureData,
+    bedTimeData,
+    wakeTimeData,
+    heartRateData,
+    regularityData,
+  } = useMemo(() => computeChartData(records), [records]);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5">

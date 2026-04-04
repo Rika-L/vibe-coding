@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  password        String
+  name            String?
+  avatar          String?
+  createdAt       DateTime         @default(now())
+  analysisReports AnalysisReport[]
+  conversations   Conversation[]
+  sleepRecords    SleepRecord[]
+
+  @@index([email])
+}
+
+model SleepRecord {
+  id            String   @id @default(uuid())
+  date          DateTime
+  bedTime       DateTime
+  wakeTime      DateTime
+  sleepDuration Float
+  deepSleep     Float?
+  lightSleep    Float?
+  remSleep      Float?
+  awakeCount    Int?
+  sleepScore    Int?
+  heartRate     Int?
+  createdAt     DateTime @default(now())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+
+  @@index([date])
+  @@index([userId])
+}
+
+model AnalysisReport {
+  id           String   @id @default(uuid())
+  title        String
+  summary      String
+  suggestions  String
+  sleepQuality String
+  dataRange    String
+  createdAt    DateTime @default(now())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  title     String
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  role           String
+  content        String
+  conversationId String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}

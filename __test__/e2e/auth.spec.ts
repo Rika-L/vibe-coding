@@ -208,8 +208,10 @@ test.describe('Authentication Flow', () => {
         await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Click logout button - use aria-label selector as button only has icon
-      await page.locator('button[aria-label="登出"]').click();
+      // Click user avatar to open dropdown menu (emoji avatar or default user icon)
+      await page.locator('span.cursor-pointer').click();
+      // Click logout option in dropdown
+      await page.locator('text=退出登录').click();
 
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
@@ -235,8 +237,10 @@ test.describe('Authentication Flow', () => {
         await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Logout - use aria-label selector as button only has icon
-      await page.locator('button[aria-label="登出"]').click();
+      // Click user avatar to open dropdown menu (emoji avatar or default user icon)
+      await page.locator('span.cursor-pointer').click();
+      // Click logout option in dropdown
+      await page.locator('text=退出登录').click();
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
 
       // Try to access dashboard

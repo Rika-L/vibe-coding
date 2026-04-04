@@ -86,8 +86,8 @@ test.describe('Dashboard Page', () => {
       // Should show history button
       await expect(page.locator('button:has-text("历史数据")')).toBeVisible();
 
-      // Should show logout button
-      await expect(page.locator('button[aria-label="登出"]')).toBeVisible();
+      // Should show user avatar (dropdown trigger for logout)
+      await expect(page.locator('span.cursor-pointer')).toBeVisible();
 
       // Should show AI report button (may be disabled if no data)
       await expect(page.locator('button:has-text("生成 AI 报告")')).toBeVisible();
@@ -159,8 +159,10 @@ test.describe('Dashboard Page', () => {
         await expect(page.locator('text=加载中')).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Click logout button - use aria-label selector as button only has icon
-      await page.locator('button[aria-label="登出"]').click();
+      // Click user avatar to open dropdown menu
+      await page.locator('span.cursor-pointer').click();
+      // Click logout option in dropdown
+      await page.locator('text=退出登录').click();
 
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/, { timeout: 5000 });

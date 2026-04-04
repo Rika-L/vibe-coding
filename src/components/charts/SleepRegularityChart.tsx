@@ -85,8 +85,8 @@ export function SleepRegularityChart({ data }: SleepRegularityChartProps) {
     yAxis: {
       type: 'value',
       name: '起床时间',
-      min: 4,
-      max: 12,
+      min: 6,
+      max: 18,
       axisLabel: {
         formatter: (value: number) => {
           return `${Math.floor(value).toString().padStart(2, '0')}:00`;

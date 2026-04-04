@@ -45,8 +45,8 @@ export function WakeTimeCard({ data }: WakeTimeCardProps) {
     },
     yAxis: {
       type: 'value',
-      min: 4, // 4 AM
-      max: 12, // 12 PM
+      min: 6, // 6 AM
+      max: 18, // 6 PM (handle afternoon wake times)
       show: false,
     },
     series: [

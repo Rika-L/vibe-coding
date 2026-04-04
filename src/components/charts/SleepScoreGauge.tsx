@@ -21,6 +21,7 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
       top: '78%',
       textStyle: {
         fontSize: 14,
+        color: '#a1a1aa',
       },
     },
     series: [
@@ -64,6 +65,7 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
           fontWeight: 'bold',
           offsetCenter: [0, '-5%'],
           formatter: '{value}',
+          color: '#fafafa',
         },
         data: [{ value: score }],
       },
@@ -84,8 +86,10 @@ export function SleepScoreGauge({ score }: SleepScoreGaugeProps) {
               color: [[1, isDark ? '#27272a' : '#e4e4e7']],
             },
           },
-          detail: { color: isDark ? '#fafafa' : '#18181b' },
-        },
+          detail: {
+            color: isDark ? '#fafafa' : '#18181b',
+          },
+        } as echarts.SeriesOption,
       ],
     }),
   });

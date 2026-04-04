@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseCSV } from '@/lib/csv-parser';
 import { prisma } from '@/lib/prisma';
-import { SleepRecord } from '@prisma/client';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
@@ -33,41 +32,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No valid data found in CSV' }, { status: 400 });
     }
 
-    // Save to database
-    const records: (SleepRecord | null)[] = await Promise.all(
-      parsedData.map(async (item) => {
-        try {
-          return await prisma.sleepRecord.create({
-            data: {
-              date: new Date(item.date),
-              bedTime: new Date(item.bedTime),
-              wakeTime: new Date(item.wakeTime),
-              sleepDuration: item.sleepDuration ?? 0,
-              deepSleep: item.deepSleep,
-              lightSleep: item.lightSleep,
-              remSleep: item.remSleep,
-              awakeCount: item.awakeCount,
-              sleepScore: item.sleepScore,
-              heartRate: item.heartRate,
-              userId: user.userId,
-            },
-          });
-        }
-        catch (e) {
-          console.error('Failed to parse record:', item, e);
-          return null;
-        }
-      }),
-    );
-
-    const validRecords = records.filter((r): r is SleepRecord => r !== null);
-    const failedCount = parsedData.length - validRecords.length;
+    // Save to database using batch insert
+    const records = await prisma.sleepRecord.createMany({
+      data: parsedData.map(item => ({
+        date: new Date(item.date),
+        bedTime: new Date(item.bedTime),
+        wakeTime: new Date(item.wakeTime),
+        sleepDuration: item.sleepDuration ?? 0,
+        deepSleep: item.deepSleep,
+        lightSleep: item.lightSleep,
+        remSleep: item.remSleep,
+        awakeCount: item.awakeCount,
+        sleepScore: item.sleepScore,
+        heartRate: item.heartRate,
+        userId: user.userId,
+      })),
+      skipDuplicates: true,
+    });
 
     return NextResponse.json({
       success: true,
-      count: validRecords.length,
-      failedCount,
-      records: validRecords,
+      count: records.count,
+      totalCount: parsedData.length,
     });
   }
   catch (error) {

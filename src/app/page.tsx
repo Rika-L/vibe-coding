@@ -47,23 +47,28 @@ export default function Home() {
       .then((data) => {
         if (data.user) {
           setUser(data.user);
+          // 只有登录后才获取用户详细信息
+          return fetch('/api/user/profile');
         }
+        return null;
       })
-      .catch(() => {
-        // 未登录，忽略错误
+      .then((res) => {
+        if (res) {
+          return res.ok ? res.json() : null;
+        }
+        return null;
       })
-      .finally(() => {
-        setCheckingAuth(false);
-      });
-    // 获取用户详细信息（包括头像）
-    fetch('/api/user/profile')
-      .then(res => res.ok ? res.json() : null)
       .then((data) => {
         if (data?.user) {
           setUserInfo(data.user);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // 忽略错误
+      })
+      .finally(() => {
+        setCheckingAuth(false);
+      });
   }, []);
 
   const handleLogout = async () => {
@@ -143,8 +148,7 @@ export default function Home() {
     if (e.dataTransfer.files?.[0]) {
       handleUpload(e.dataTransfer.files[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleUpload]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -161,8 +165,8 @@ export default function Home() {
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      {/* Canvas 背景 - 仅覆盖 Hero 区域 */}
-      <div className="absolute inset-0 h-[70vh] overflow-hidden">
+      {/* Canvas 背景 - 覆盖整个页面 */}
+      <div className="fixed inset-0 -z-10">
         <CanvasBackground className="h-full w-full" />
       </div>
 

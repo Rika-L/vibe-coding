@@ -1,5 +1,5 @@
 // __test__/setup.integration.ts
-// Integration test setup - sets up test database
+// Integration test setup - sets up test database with SQLite
 import { beforeAll, afterAll } from 'vitest';
 import { execSync } from 'child_process';
 import { join } from 'path';
@@ -29,9 +29,29 @@ beforeAll(async () => {
     }
   }
 
-  // Run migrations
-  execSync('npx prisma migrate deploy', { stdio: 'pipe', timeout: 30000 });
-}, 60000);
+  // Copy test schema to main schema temporarily for migration
+  const mainSchemaPath = join(prismaDir, 'schema.prisma');
+  const testSchemaPath = join(prismaDir, 'schema.test.prisma');
+  const backupSchemaPath = join(prismaDir, 'schema.prisma.backup');
+
+  // Backup main schema if not already backed up
+  if (!fs.existsSync(backupSchemaPath)) {
+    fs.copyFileSync(mainSchemaPath, backupSchemaPath);
+  }
+
+  // Copy test schema as main schema for migration
+  fs.copyFileSync(testSchemaPath, mainSchemaPath);
+
+  try {
+    // Generate client and push schema for SQLite
+    execSync('npx prisma generate', { stdio: 'pipe', timeout: 60000 });
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'pipe', timeout: 30000 });
+  }
+  finally {
+    // Restore main schema
+    fs.copyFileSync(backupSchemaPath, mainSchemaPath);
+  }
+}, 120000);
 
 afterAll(async () => {
   // Clean up test database only after all tests complete
